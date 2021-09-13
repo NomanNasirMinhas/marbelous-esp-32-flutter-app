@@ -5,6 +5,8 @@ import 'package:loading_overlay/loading_overlay.dart';
 import '../constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:udp/udp.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 class CommandScreen extends StatefulWidget {
   // CommandScreen({Key? key}) : super(key: key);
@@ -19,11 +21,47 @@ class CommandScreen extends StatefulWidget {
 class _CommandScreenState extends State<CommandScreen> {
   bool isScanning = false;
   bool showRecentCmd = false;
+  bool serverStarted = false;
+  final info = NetworkInfo();
+  var wifiIP;
   String ipAddress;
   final cmdTextController = TextEditingController();
   String currentCommand = "";
   String currentResponse;
   List<String> recentCommands = [];
+  List<String> recentESPmsgs = [];
+
+  startUDPServer() async {
+    try {
+      var receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
+      var wifi = await info.getWifiIP();
+      setState(() {
+        wifiIP = wifi;
+        serverStarted = true;
+      });
+      print("UDP Server Started");
+      await receiver.listen((datagram) {
+        var str = String.fromCharCodes(datagram.data);
+        recentESPmsgs.add(str);
+        final snackBar = SnackBar(
+          content: Text("Recieved message $str from ${datagram.address}"),
+          action: SnackBarAction(
+            label: 'View',
+            onPressed: () {
+              // Some code to undo the change.
+            },
+          ),
+        );
+
+        // Find the ScaffoldMessenger in the widget tree
+        // and use it to show a SnackBar.
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      });
+    } on Exception catch (e) {
+      // TODO
+      print(e.toString());
+    }
+  }
 
   @override
   void initState() {
@@ -32,6 +70,7 @@ class _CommandScreenState extends State<CommandScreen> {
     setState(() {
       ipAddress = widget.deviceIP;
     });
+    startUDPServer();
   }
 
   Future<void> sendCommand(String cmd) async {
@@ -159,6 +198,18 @@ class _CommandScreenState extends State<CommandScreen> {
                               ? "No Device Selected"
                               : "$ipAddress Selected",
                           style: headingText,
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Text(
+                          serverStarted == true
+                              ? "Listening on $wifiIP:65000"
+                              : "Starting UDP Server...",
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontFamily: 'Bebas',
+                              color: Colors.black),
                         ),
                         SizedBox(
                           height: 20,

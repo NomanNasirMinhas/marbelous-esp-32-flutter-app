@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),
-      initialRoute: HomeScreen.id,
+      initialRoute: CommandScreen.id,
       routes: {
         HomeScreen.id: (context) => HomeScreen(),
         CommandScreen.id: (context) => CommandScreen(),

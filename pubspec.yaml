@@ -33,6 +33,7 @@ dependencies:
   loading_overlay: ^0.3.0
   http: ^0.13.3
   font_awesome: ^5.10.1
+  udp: ^3.0.3
 
 dev_dependencies:
   flutter_test:
