@@ -5,8 +5,7 @@ import 'package:loading_overlay/loading_overlay.dart';
 import '../constants.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:udp/udp.dart';
-import 'package:network_info_plus/network_info_plus.dart';
+import 'package:flutter/services.dart';
 
 class CommandScreen extends StatefulWidget {
   // CommandScreen({Key? key}) : super(key: key);
@@ -21,47 +20,13 @@ class CommandScreen extends StatefulWidget {
 class _CommandScreenState extends State<CommandScreen> {
   bool isScanning = false;
   bool showRecentCmd = false;
-  bool serverStarted = false;
-  final info = NetworkInfo();
-  var wifiIP;
+
   String ipAddress;
   final cmdTextController = TextEditingController();
   String currentCommand = "";
   String currentResponse;
   List<String> recentCommands = [];
   List<String> recentESPmsgs = [];
-
-  startUDPServer() async {
-    try {
-      var receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
-      var wifi = await info.getWifiIP();
-      setState(() {
-        wifiIP = wifi;
-        serverStarted = true;
-      });
-      print("UDP Server Started");
-      await receiver.listen((datagram) {
-        var str = String.fromCharCodes(datagram.data);
-        recentESPmsgs.add(str);
-        final snackBar = SnackBar(
-          content: Text("Recieved message $str from ${datagram.address}"),
-          action: SnackBarAction(
-            label: 'View',
-            onPressed: () {
-              // Some code to undo the change.
-            },
-          ),
-        );
-
-        // Find the ScaffoldMessenger in the widget tree
-        // and use it to show a SnackBar.
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-      });
-    } on Exception catch (e) {
-      // TODO
-      print(e.toString());
-    }
-  }
 
   @override
   void initState() {
@@ -70,7 +35,20 @@ class _CommandScreenState extends State<CommandScreen> {
     setState(() {
       ipAddress = widget.deviceIP;
     });
-    startUDPServer();
+  }
+
+  displaySnackBar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+      // action: SnackBarAction(
+      //   label: 'View',
+      //   onPressed: () {
+      //     // Some code to undo the change.
+      //   },
+      // ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Future<void> sendCommand(String cmd) async {
@@ -105,57 +83,73 @@ class _CommandScreenState extends State<CommandScreen> {
     if (recentCommands.length > 0) {
       for (var i = 0; i < recentCommands.length; i++) {
         list.add(
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                currentCommand = recentCommands[i];
-                showRecentCmd = false;
-              });
-            },
-            child: Container(
-              decoration: deviceCard,
-              width: 300,
-              height: 50,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(
-                      recentCommands[i],
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.black,
-                        fontFamily: 'Roboto',
-                      ),
+          Column(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    var cmd = recentCommands[i];
+                    Clipboard.setData(ClipboardData(text: cmd));
+                    displaySnackBar("Command Copied to Clipboard: $cmd");
+                    showRecentCmd = false;
+                  });
+                },
+                child: Container(
+                  decoration: deviceCard,
+                  width: 300,
+                  // height: 50,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text(
+                          recentCommands[i],
+                          softWrap: true,
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                            fontFamily: 'Roboto',
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+              SizedBox(
+                height: 20,
+              )
+            ],
           ),
         );
       }
     } else {
       list.add(
-        Container(
-          decoration: deviceCard,
-          width: 300,
-          height: 50,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  "No Recent Command Found",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                    fontFamily: 'Bebas',
-                  ),
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              // var cmd = "No Recent Command";
+              // Clipboard.setData(ClipboardData(text: cmd));
+              // displaySnackBar("Command Copied to Clipboard: $cmd");
+              showRecentCmd = false;
+            });
+          },
+          child: Container(
+            decoration: deviceCard,
+            width: 300,
+            height: 50,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "No Recent Command Found",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontFamily: 'Bebas',
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -198,18 +192,6 @@ class _CommandScreenState extends State<CommandScreen> {
                               ? "No Device Selected"
                               : "$ipAddress Selected",
                           style: headingText,
-                        ),
-                        SizedBox(
-                          height: 20,
-                        ),
-                        Text(
-                          serverStarted == true
-                              ? "Listening on $wifiIP:65000"
-                              : "Starting UDP Server...",
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontFamily: 'Bebas',
-                              color: Colors.black),
                         ),
                         SizedBox(
                           height: 20,

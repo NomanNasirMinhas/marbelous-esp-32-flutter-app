@@ -12,8 +12,8 @@ const buttonStyle = TextStyle(
 BoxDecoration deviceCard = BoxDecoration(
   gradient: LinearGradient(
     colors: [
-      const Color(0xFFF9E79F),
-      const Color(0xFFFEF9E7),
+      const Color(0xFFF9FDFC),
+      const Color(0xFFDDFCF6),
     ],
     transform: GradientRotation(60),
     begin: const FractionalOffset(0.0, 0.0),
