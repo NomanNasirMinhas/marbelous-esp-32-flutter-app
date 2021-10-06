@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marbelous_esp32_app/screens/home_screen.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:udp/udp.dart';
 import './../constants.dart';
@@ -8,6 +9,11 @@ import 'package:localstorage/localstorage.dart';
 
 class AddDeviceScreen extends StatefulWidget {
   // AddDeviceScreen({Key? key}) : super(key: key);
+  
+  final String deviceType;
+  AddDeviceScreen({this.deviceType});
+
+  
   static String id = "add_device_screen";
 
   @override
@@ -21,12 +27,16 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   bool deviceFound = false;
   final cmdTextController = TextEditingController();
   var receiver;
-  String deviceID;
+  String deviceMac;
+  String deviceType;
   String deviceName;
   String deviceIP;
 
+  String deviceToAdd;
+
   startUDPServer() async {
     try {
+      print("Starting search for $deviceToAdd");
       receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
       var wifi = await info.getWifiIP();
       setState(() {
@@ -36,13 +46,14 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       print("UDP Server Started");
       await receiver.listen((datagram) {
         var str = String.fromCharCodes(datagram.data);
-        var tokens = str.split(":");
+        var tokens = str.split("=");
         if (tokens[0].trim() == "device_info") {
           var deviceInfo = tokens[1].split("_");
           setState(() {
-            deviceID = deviceInfo[0];
-            deviceName = deviceInfo[0];
-            deviceIP = deviceInfo[1];
+            deviceMac = deviceInfo[0];
+            deviceName = deviceInfo[1];
+            deviceType = deviceInfo[1];
+            deviceIP = deviceInfo[2];
             deviceFound = true;
           });
         }
@@ -71,16 +82,18 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
     try {
       final db = Localstore.instance;
       // gets new id
-      final id = db.collection('marbelous_devices').doc().id;
+      // final id = db.collection('marbelous_devices').doc().id;
 
       // save the item
-      await db
-          .collection('marbelous_devices')
-          .doc(id)
-          .set({'name': deviceName, 'id': deviceID, 'ip': deviceIP});
+      await db.collection('marbelous_devices').doc(deviceMac).set({
+        'name': deviceName,
+        'macAddrr': deviceMac,
+        'ip': deviceIP,
+        'type': deviceType
+      });
       receiver.close();
       displaySnackBar("Device Added Successfully");
-      Navigator.pop(context);
+      Navigator.popAndPushNamed(context, HomeScreen.id);
     } on Exception catch (e) {
       print(e.toString());
       cancel();
@@ -90,17 +103,22 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   cancel() {
     displaySnackBar("Device Not Added");
     receiver.close();
-    Navigator.pop(context);
+    Navigator.popAndPushNamed(context, HomeScreen.id);
   }
 
   @override
   void initState() {
     super.initState();
-    startUDPServer();
+    // print("Starting search for $deviceToAdd");
+    // startUDPServer();
   }
 
   @override
   Widget build(BuildContext context) {
+    final arguments = ModalRoute.of(context).settings.arguments as Map;
+    setState(() {
+      deviceToAdd = arguments['deviceType'];
+    });
     return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -166,7 +184,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                               height: 20,
                             ),
                             Text(
-                              "Device ID: $deviceID",
+                              "Device Type: $deviceType",
                               style: TextStyle(
                                   fontSize: 30,
                                   fontFamily: 'Roboto',
@@ -174,7 +192,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                                   color: Colors.green[800]),
                             ),
                             SizedBox(
-                              height: 20,
+                              height: 50,
                             ),
                             Text(
                               "Device IP: $deviceIP",
@@ -186,6 +204,17 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                             ),
                             SizedBox(
                               height: 50,
+                            ),
+                            Text(
+                              "MAC Address: $deviceMac",
+                              style: TextStyle(
+                                  fontSize: 30,
+                                  fontFamily: 'Roboto',
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[800]),
+                            ),
+                            SizedBox(
+                              height: 20,
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -220,7 +249,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     : Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
+                          children: serverStarted ? [
                             SizedBox(
                               height: 200,
                             ),
@@ -229,6 +258,33 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                               textAlign: TextAlign.center,
                               style: headingText,
                             ),
+                            SizedBox(
+                              height: 30,
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                cancel();
+                              },
+                              child: Text("Cancel"),
+                            )
+                          ] : [
+                            SizedBox(
+                              height: 200,
+                            ),
+                            Text(
+                              "Press Button Below to Start Adding the Device",
+                              textAlign: TextAlign.center,
+                              style: headingText,
+                            ),
+                            SizedBox(
+                              height: 30,
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                startUDPServer();
+                              },
+                              child: Text("Add Device"),
+                            )
                           ],
                         ),
                       ),

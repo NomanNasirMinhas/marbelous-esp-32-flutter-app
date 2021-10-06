@@ -1,7 +1,8 @@
 class MarbleDevice {
-  MarbleDevice({this.ipAddrr, this.name, this.id, this.docID});
+  MarbleDevice({this.ipAddrr, this.name, this.macAddrr, this.type, this.docID});
   String ipAddrr;
   String name;
-  String id;
+  String macAddrr;
+  String type;
   String docID;
 }
