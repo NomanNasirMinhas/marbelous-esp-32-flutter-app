@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marbelous_esp32_app/screens/add_device_screen.dart';
+import 'package:marbelous_esp32_app/screens/global_settings.dart';
 import 'package:marbelous_esp32_app/screens/setting_screens/starter_advanced_settings.dart';
 import 'dart:io';
 import 'package:network_info_plus/network_info_plus.dart';
@@ -11,6 +12,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:localstore/localstore.dart';
 import './../utilities/device_class.dart';
+import './device_cards/starter_card.dart';
 
 class HomeScreen extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
@@ -64,28 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  forgetDevice(String docID) async {
-    var id = docID.split("/").last;
-    print("Forgetting $id");
-    final db = Localstore.instance;
-    await db.collection('marbelous_devices').doc(id).delete();
-    for (int i = 0; i < devices.length; i++) {
-      print("Checking ${devices[i].docID}");
-      if (devices[i].docID == docID) {
-        setState(() {
-          devices.removeAt(i);
-          devices.join(', ');
-        });
-      }
-    }
-    // setState(() {
-    //   devices.removeWhere((element) => element.docID == id);
-    //   devices.join(', ');
-    //   print(devices.length);
-    //   scanNetwork();
-    // });
-  }
-
   Widget getCurrentWidget() {
     switch (currentWidget) {
       case "none":
@@ -93,7 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: sectionCard,
           child: GestureDetector(
             onTap: () {
-              Navigator.popAndPushNamed(context, AddDeviceScreen.id, arguments: {'deviceType': "starter"});
+              Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                  arguments: {'deviceType': "starter"});
             },
             child: Text(
               "Starter NOT Found. Click to Add",
@@ -104,8 +85,20 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         break;
       case "starter":
-        return DeviceCard(
+        return StarterCard(
             title: "Starter", icon: "assets/img/starter.png", type: "starter");
+        break;
+      case 'finisher':
+        break;
+      case 'wheel':
+        break;
+      case 'spiral':
+        break;
+      case 'teleport1':
+        break;
+      case 'teleport2':
+        break;
+      case 'switch':
         break;
       default:
         return Text(
@@ -130,33 +123,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: LoadingOverlay(
           isLoading: isScanning,
           child: Scaffold(
-            // floatingActionButton: FloatingActionButton(
-            //   backgroundColor: Colors.grey[700],
-            //   child: Icon(
-            //     Icons.add_circle,
-            //     size: 40,
-            //     color: Colors.blue,
-            //   ),
-            //   onPressed: () {
-            //     Navigator.push(context, MaterialPageRoute(builder: (context) {
-            //       return AddDeviceScreen();
-            //     }));
-            //   },
-            // ),
             appBar: AppBar(
               actions: [
-                IconButton(
-                  icon: Icon(Icons.add_circle),
-                  color: Colors.white,
-                  onPressed: () {
-                    Navigator.popAndPushNamed(context, AddDeviceScreen.id);
-                  },
-                ),
                 IconButton(
                   icon: Icon(Icons.settings),
                   color: Colors.white,
                   onPressed: () {
-                    Navigator.pushNamed(context, CommonSettings.id);
+                    Navigator.pushNamed(context, GlobalSettings.id);
                   },
                 ),
                 IconButton(
@@ -167,16 +140,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
               ],
-
-              // title: Text(
-              //   "Marbellous MVP",
-              //   style: TextStyle(
-              //     color: Colors.white,
-              //     fontFamily: 'Bebas',
-              //     fontSize: 40,
-              //     decoration: TextDecoration.overline,
-              //   ),
-              // ),
+              title: Text(
+                "Marbellous Home",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Scheherazade',
+                  fontSize: 40,
+                  // decoration: TextDecoration.overline,
+                ),
+              ),
             ),
             body: Center(
               child: Container(
@@ -185,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
                     Text(
-                      "Marbelous App",
+                      "Marbelous Icon Goes Here",
                       style: headingText,
                       textAlign: TextAlign.center,
                     ),
@@ -193,16 +165,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 10),
                       child: getCurrentWidget(),
                     ),
-                    // Column(
-                    //   children: <Widget>[
-                    //     Container(
-                    //       decoration: deviceCard,
-                    //       child: Column(
-                    //         children: [],
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
                     Container(
                       decoration: sectionCard,
                       child: Column(
@@ -215,17 +177,105 @@ class _HomeScreenState extends State<HomeScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              new Image.asset(
-                                'assets/img/starter.png',
-                                width: 50,
-                                height: 50,
-                              )
+                              //Starter ICON
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    currentWidget = 'starter';
+                                  });
+                                },
+                                child: DeviceIcon(
+                                  deviceType: 'starter',
+                                  icon: 'starter.png',
+                                ),
+                              ),
+
+                              //Icon 2
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    currentWidget = 'finisher';
+                                  });
+                                },
+                                child: DeviceIcon(
+                                  deviceType: 'finisher',
+                                  icon: 'finisher.png',
+                                ),
+                              ),
+
+                              //Icon 3
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    currentWidget = 'wheel';
+                                  });
+                                },
+                                child: DeviceIcon(
+                                  deviceType: 'wheel',
+                                  icon: 'wheel.png',
+                                ),
+                              ),
+
+                              //Icon 4
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    currentWidget = 'spiral';
+                                  });
+                                },
+                                child: DeviceIcon(
+                                  deviceType: 'spiral',
+                                  icon: 'spiral.png',
+                                ),
+                              ),
                             ],
                           ),
                           SizedBox(
-                            height: 10,
+                            height: 20,
                           ),
-                          Row(),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              //Starter ICON
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    currentWidget = 'teleport1';
+                                  });
+                                },
+                                child: DeviceIcon(
+                                  deviceType: 'teleport1',
+                                  icon: 'teleporter1.png',
+                                ),
+                              ),
+
+                              //Icon 2
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    currentWidget = 'teleport2';
+                                  });
+                                },
+                                child: DeviceIcon(
+                                  deviceType: 'teleport2',
+                                  icon: 'teleporter2.png',
+                                ),
+                              ),
+
+                              //Icon 3
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    currentWidget = 'switch';
+                                  });
+                                },
+                                child: DeviceIcon(
+                                  deviceType: 'switch',
+                                  icon: 'switch.png',
+                                ),
+                              ),
+                            ],
+                          ),
                           SizedBox(
                             height: 20,
                           ),
@@ -243,185 +293,79 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class RoundedButton extends StatelessWidget {
-  RoundedButton({this.color, this.onClick, this.title});
-  final String title;
-  final Color color;
-  final Function onClick;
+class DeviceIcon extends StatelessWidget {
+  DeviceIcon({this.deviceType, this.icon});
+
+  final String deviceType;
+  final String icon;
 
   @override
   Widget build(BuildContext context) {
+    displaySnackBar(String message) {
+      final snackBar = SnackBar(
+        content: Text(message),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
+
+    openSettings(String deviceType) {
+      switch (deviceType) {
+        case 'starter':
+          Navigator.pushNamed(context, StarterCommonSettings.id);
+          break;
+        case 'finisher':
+          break;
+        case 'wheel':
+          break;
+        case 'spiral':
+          break;
+        case 'teleport1':
+          break;
+        case 'teleport2':
+          break;
+        case 'switch':
+          break;
+        default:
+          displaySnackBar("Invalid Device Selected");
+          break;
+      }
+    }
+
+    forgetDevice(String deviceType) async {
+      final db = Localstore.instance;
+      final devices = await db.collection('marbelous_devices').get();
+      print(devices);
+      if (devices != null) {
+        devices.forEach((key, value) async {
+          if (value['type'] == deviceType) {
+            var id = value['macAddrr'].split("/").last;
+            var name = value['name'];
+            print("Forgetting MAC $id");
+            await db.collection('marbelous_devices').doc(id).delete();
+            displaySnackBar("Forgot $name Device");
+            Navigator.popAndPushNamed(context, HomeScreen.id);
+          }
+        });
+      }
+    }
+
     return GestureDetector(
-      onTap: onClick,
+      onLongPress: () {
+        forgetDevice(deviceType);
+      },
+      onDoubleTap: () {
+        openSettings(deviceType);
+      },
       child: Container(
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[700], width: 2),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Colors.white,
-              fontFamily: 'Bebas',
-            ),
-          ),
+        child: new Image.asset(
+          'assets/img/$icon',
+          width: 50,
+          height: 50,
         ),
-      ),
-    );
-  }
-}
-
-class DeviceCard extends StatefulWidget {
-  // HomeScreen({Key? key}) : super(key: key);
-  // static String id = "home_screen";
-  DeviceCard({this.title, this.icon, this.type});
-  final String title;
-  final String icon;
-  final String type;
-  @override
-  _DeviceCardState createState() => _DeviceCardState();
-}
-
-class _DeviceCardState extends State<DeviceCard> {
-  //Starter Data
-  int dropMarbles = 0;
-  int dropMarbleInterval = 0;
-
-  Widget starterData() {
-    return Column(
-      children: [
-        RoundedButton(
-          title: "Drop Marble",
-          color: Colors.blue,
-          onClick: () {},
-        ),
-        SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            RoundedButton(
-              title: " - ",
-              color: Colors.blue[300],
-              onClick: () {
-                if (dropMarbles > 0) {
-                  setState(() {
-                    dropMarbles--;
-                  });
-                }
-              },
-            ),
-            Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2)),
-              child: Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: Text(this.dropMarbles.toString()),
-              ),
-            ),
-            RoundedButton(
-              title: " + ",
-              color: Colors.blue[900],
-              onClick: () {
-                setState(() {
-                  dropMarbles++;
-                });
-              },
-            ),
-          ],
-        ),
-        SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            RoundedButton(
-              title: " - ",
-              color: Colors.blue[300],
-              onClick: () {
-                if (dropMarbleInterval > 0) {
-                  setState(() {
-                    dropMarbleInterval--;
-                  });
-                }
-              },
-            ),
-            Container(
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2)),
-              child: Padding(
-                padding: const EdgeInsets.all(6.0),
-                child: Text(this.dropMarbleInterval.toString()),
-              ),
-            ),
-            RoundedButton(
-              title: " + ",
-              color: Colors.blue[900],
-              onClick: () {
-                setState(() {
-                  dropMarbleInterval++;
-                });
-              },
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: deviceCard,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.teal[700],
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.black,
-                  width: 2,
-                ),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                widget.title,
-                style: TextStyle(
-                    color: Colors.white, fontFamily: "Roboto", fontSize: 20),
-              ),
-            ),
-          ),
-          SizedBox(height: 1),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Image.asset(
-                    widget.icon,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: SizedBox(),
-                ),
-                Expanded(flex: 6, child: starterData()),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

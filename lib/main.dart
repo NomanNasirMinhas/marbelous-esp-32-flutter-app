@@ -5,6 +5,7 @@ import './screens/home_screen.dart';
 import './screens/command_screen.dart';
 import 'screens/setting_screens/starter_common_settings.dart';
 import './screens/setting_screens/starter_advanced_settings.dart';
+import './screens/global_settings.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,9 +25,10 @@ class MyApp extends StatelessWidget {
       routes: {
         HomeScreen.id: (context) => HomeScreen(),
         CommandScreen.id: (context) => CommandScreen(),
-        CommonSettings.id:(context) => CommonSettings(),
-        AdvancedSettings.id:(context) => AdvancedSettings(),
-        AddDeviceScreen.id:(context) => AddDeviceScreen(),
+        StarterCommonSettings.id: (context) => StarterCommonSettings(),
+        StarterAdvancedSettings.id: (context) => StarterAdvancedSettings(),
+        AddDeviceScreen.id: (context) => AddDeviceScreen(),
+        GlobalSettings.id: (context) => GlobalSettings(),
       },
     );
   }

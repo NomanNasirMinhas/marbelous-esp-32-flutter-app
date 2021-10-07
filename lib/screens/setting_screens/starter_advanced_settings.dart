@@ -6,15 +6,15 @@ import 'package:localstore/localstore.dart';
 import 'dart:io';
 import 'package:localstorage/localstorage.dart';
 
-class AdvancedSettings extends StatefulWidget {
-  // AdvancedSettings({Key? key}) : super(key: key);
+class StarterAdvancedSettings extends StatefulWidget {
+  // StarterAdvancedSettings({Key? key}) : super(key: key);
   static String id = "starter_advanced_settings";
 
   @override
   _AdvancedSettingsState createState() => _AdvancedSettingsState();
 }
 
-class _AdvancedSettingsState extends State<AdvancedSettings> {
+class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
   bool serverStarted = false;
   final info = NetworkInfo();
   var wifiIP;
@@ -99,9 +99,7 @@ class _AdvancedSettingsState extends State<AdvancedSettings> {
             padding: const EdgeInsets.all(8.0),
             child: ListView(
               // mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text("Common Settings")
-              ],
+              children: <Widget>[Text("Common Settings")],
             ),
           ),
         ));

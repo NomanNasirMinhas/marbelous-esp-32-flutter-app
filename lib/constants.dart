@@ -2,7 +2,20 @@ import 'package:flutter/material.dart';
 
 const backgroundColor = Color(0xFF0374A0);
 const headingText = TextStyle(fontSize: 40, fontFamily: 'Bebas');
-const subheadingText = TextStyle(fontSize: 18, fontFamily: 'Scheherazade', fontWeight: FontWeight.bold);
+const subheadingText = TextStyle(
+    fontSize: 18, fontFamily: 'Scheherazade', fontWeight: FontWeight.bold);
+const infoText = TextStyle(
+    fontSize: 18,
+    fontFamily: 'Roboto',
+    fontWeight: FontWeight.normal,
+    color: Colors.black);
+
+const boldInfoText = TextStyle(
+    fontSize: 18,
+    fontFamily: 'Roboto',
+    fontWeight: FontWeight.bold,
+    color: Colors.black);
+
 const buttonStyle = TextStyle(
   color: Colors.white,
   fontFamily: 'Roboto',
@@ -38,8 +51,6 @@ BoxDecoration sectionCard = BoxDecoration(
   color: Colors.grey[200],
   borderRadius: BorderRadius.circular(12),
 );
-
-
 
 const kTextFieldDecoration = InputDecoration(
   hintText: 'http://IP:Port/command_parameter',

@@ -9,11 +9,10 @@ import 'package:localstorage/localstorage.dart';
 
 class AddDeviceScreen extends StatefulWidget {
   // AddDeviceScreen({Key? key}) : super(key: key);
-  
+
   final String deviceType;
   AddDeviceScreen({this.deviceType});
 
-  
   static String id = "add_device_screen";
 
   @override
@@ -249,43 +248,58 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                     : Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: serverStarted ? [
-                            SizedBox(
-                              height: 200,
-                            ),
-                            Text(
-                              "Listening for new Device at\n${wifiIP}:65000...",
-                              textAlign: TextAlign.center,
-                              style: headingText,
-                            ),
-                            SizedBox(
-                              height: 30,
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                cancel();
-                              },
-                              child: Text("Cancel"),
-                            )
-                          ] : [
-                            SizedBox(
-                              height: 200,
-                            ),
-                            Text(
-                              "Press Button Below to Start Adding the Device",
-                              textAlign: TextAlign.center,
-                              style: headingText,
-                            ),
-                            SizedBox(
-                              height: 30,
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                startUDPServer();
-                              },
-                              child: Text("Add Device"),
-                            )
-                          ],
+                          children: serverStarted
+                              ? [
+                                  SizedBox(
+                                    height: 200,
+                                  ),
+                                  Text(
+                                    "Listening for new '$deviceToAdd' Device at\n${wifiIP}:65000...",
+                                    textAlign: TextAlign.center,
+                                    style: headingText,
+                                  ),
+                                  SizedBox(
+                                    height: 30,
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      cancel();
+                                    },
+                                    child: Text("Cancel"),
+                                  )
+                                ]
+                              : [
+                                  SizedBox(
+                                    height: 200,
+                                  ),
+                                  Text(
+                                    "Press Button Below to Start Adding the Device",
+                                    textAlign: TextAlign.center,
+                                    style: headingText,
+                                  ),
+                                  SizedBox(
+                                    height: 30,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          startUDPServer();
+                                        },
+                                        child: Text("Add Device"),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.popAndPushNamed(
+                                              context, HomeScreen.id);
+                                        },
+                                        child: Text("Cancel"),
+                                      ),
+                                    ],
+                                  )
+                                ],
                         ),
                       ),
               ],
