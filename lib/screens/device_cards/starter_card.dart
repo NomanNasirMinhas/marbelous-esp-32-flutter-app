@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import './../../components/round_button.dart';
 import './../../constants.dart';
 import './../../components/device_card.dart';
+import 'package:http/http.dart' as http;
 
 class StarterCard extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
   // static String id = "home_screen";
-  StarterCard({this.title, this.icon, this.type});
+  StarterCard({this.title, this.icon, this.type, this.ip});
   final String title;
   final String icon;
   final String type;
+  final String ip;
+
   @override
   _StarterCardState createState() => _StarterCardState();
 }
@@ -19,13 +22,39 @@ class _StarterCardState extends State<StarterCard> {
   int dropMarbles = 0;
   int dropMarbleInterval = 0;
 
+  dropMarble() async {
+    print(widget.ip);
+    try {
+      var url = Uri.parse(
+          "http://${widget.ip}/control?command=drop_marble_${dropMarbles}x${dropMarbleInterval}_");
+      http.Response res = await http.get(url);
+      if (res.statusCode == 200) {
+        displaySnackBar("Command Sent Successfully");
+      } else {
+        displaySnackBar("Command Sending Failed");
+      }
+    } on Exception catch (e) {
+      print(e);
+      displaySnackBar("Command Sending Error");
+    }
+  }
+
+  displaySnackBar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
   Widget starterData() {
     return Column(
       children: [
         RoundedButton(
           title: "Drop Marble",
           color: Colors.blue,
-          onClick: () {},
+          onClick: () {
+            dropMarble();
+          },
         ),
         SizedBox(height: 10),
         Row(

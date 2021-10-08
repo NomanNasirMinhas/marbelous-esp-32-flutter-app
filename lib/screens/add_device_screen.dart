@@ -48,13 +48,15 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         var tokens = str.split("=");
         if (tokens[0].trim() == "device_info") {
           var deviceInfo = tokens[1].split("_");
-          setState(() {
-            deviceMac = deviceInfo[0];
-            deviceName = deviceInfo[1];
-            deviceType = deviceInfo[1];
-            deviceIP = deviceInfo[2];
-            deviceFound = true;
-          });
+          if (deviceInfo[1] == deviceToAdd) {
+            setState(() {
+              deviceMac = deviceInfo[0];
+              deviceName = deviceInfo[1];
+              deviceType = deviceInfo[1];
+              deviceIP = deviceInfo[2];
+              deviceFound = true;
+            });
+          }
         }
       });
     } on Exception catch (e) {

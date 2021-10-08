@@ -31,6 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
   bool starterFound = false;
   String currentWidget = "none";
   String selectedDevice;
+  String starterIP;
+
+
+
 
   scanNetwork() async {
     setState(() {
@@ -58,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (device.type == "starter") {
             starterFound = true;
             currentWidget = "starter";
+            starterIP = device.ipAddrr;
           }
           devices.add(device);
         });
@@ -108,7 +113,8 @@ class _HomeScreenState extends State<HomeScreen> {
           return StarterCard(
               title: "Starter",
               icon: "assets/img/starter.png",
-              type: "starter");
+              type: "starter",
+              ip: starterIP,);
         } else {
           return GestureDetector(
               onTap: () {
