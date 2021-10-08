@@ -69,6 +69,10 @@ const kTextFieldDecoration = InputDecoration(
   ),
 );
 
+const settingInputField = InputDecoration(
+  alignLabelWithHint: true,
+);
+
 const recordTextStyle = TextStyle(
   color: Colors.white,
   fontSize: 18,
