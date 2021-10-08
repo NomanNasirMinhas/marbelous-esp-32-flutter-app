@@ -8,6 +8,8 @@ import 'package:udp/udp.dart';
 import 'package:localstore/localstore.dart';
 import 'dart:io';
 import 'package:localstorage/localstorage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StarterAdvancedSettings extends StatefulWidget {
   // StarterAdvancedSettings({Key? key}) : super(key: key);
@@ -18,19 +20,21 @@ class StarterAdvancedSettings extends StatefulWidget {
 }
 
 class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
+  bool loading = false;
   final cmdTextController = TextEditingController();
   int autoOffBatt = 0;
   int autoOffUSB = 0;
   int keepAliveInterval = 0;
-  String MQTT_pass;
-  String MQTT_cmd1;
-  String MQTT_url1;
-  String MQTT_cmd2;
-  String MQTT_url2;
-  String trigerUL;
-  bool wifiEnabled;
-  String cmdToDropMarble;
-  bool shutdownSoundEnabled;
+  String MQTT_pass = "";
+  String MQTT_cmd1 = "";
+  String MQTT_url1 = "";
+  String MQTT_cmd2 = "";
+  String MQTT_url2 = "";
+  String triggerURL = "";
+  bool wifiEnabled = false;
+  String cmdToDropMarble = "";
+  bool shutdownSoundEnabled = false;
+  String starter_ip;
 
   displaySnackBar(String message) {
     final snackBar = SnackBar(
@@ -52,6 +56,51 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
 
   @override
   Widget build(BuildContext context) {
+    final arguments = ModalRoute.of(context).settings.arguments as Map;
+    setState(() {
+      starter_ip = arguments['starter_ip'];
+    });
+    List<String> settings_commands = [
+      "http://$starter_ip/control?command=auto_off_battery&value=$autoOffBatt",
+      "http://$starter_ip/control?command=auto_off_usb&value=$autoOffUSB",
+      "http://$starter_ip/control?command=keep_alive&value=$keepAliveInterval",
+      "http://$starter_ip/control?command=MQTT_password&data=$MQTT_pass",
+      "http://$starter_ip/control?command=MQTT_command1&data=$MQTT_cmd1&URL=$MQTT_url1",
+      "http://$starter_ip/control?command=MQTT_command2&data=$MQTT_cmd2&URL=$MQTT_url2",
+      "http://$starter_ip/control?command=trigger_url&data=$triggerURL",
+      "http://$starter_ip/control?command=wifi&state=${wifiEnabled == true ? 1 : 0}",
+      "http://$starter_ip/control?command=dropmarble_comman&data=$cmdToDropMarble",
+      "http://$starter_ip/control?command=shutdown_alart_sound&state=${shutdownSoundEnabled == true ? 1 : 0}"
+    ];
+
+    saveSettings() async {
+      setState(() {
+        loading = true;
+      });
+      try {
+        settings_commands.forEach((element) async {
+          var url = Uri.parse(element.trim());
+          http.Response res = await http.get(url);
+          if (res.statusCode == 200) {
+            print("OK Cmd = $element");
+          } else {
+            print("Failed Cmd = $element");
+          }
+        });
+        setState(() {
+          loading = false;
+        });
+        displaySnackBar("Settings Updated");
+        Navigator.pop(context);
+      } on Exception catch (e) {
+        print(e);
+        setState(() {
+          loading = false;
+        });
+        displaySnackBar("Error in Updating Settings");
+      }
+    }
+
     return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -107,7 +156,7 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                           width: 70,
                           child: TextField(
                             // maxLength: 3,
-                            controller: cmdTextController,
+                            // controller: cmdTextController,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.left,
                             style: boldInfoText,
@@ -154,7 +203,7 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                           width: 70,
                           child: TextField(
                             // maxLength: 3,
-                            controller: cmdTextController,
+                            // controller: cmdTextController,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.left,
                             style: boldInfoText,
@@ -162,11 +211,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                               if (value != null) {
                                 setState(() {
                                   try {
-                                    autoOffBatt = int.parse(value);
+                                    autoOffUSB = int.parse(value);
                                   } on Exception catch (e) {
                                     // TODO
                                     setState(() {
-                                      autoOffBatt = 0;
+                                      autoOffUSB = 0;
                                     });
                                     print(value);
                                     print(e);
@@ -201,7 +250,7 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                           width: 70,
                           child: TextField(
                             // maxLength: 3,
-                            controller: cmdTextController,
+                            // controller: cmdTextController,
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.left,
                             style: boldInfoText,
@@ -209,11 +258,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                               if (value != null) {
                                 setState(() {
                                   try {
-                                    autoOffBatt = int.parse(value);
+                                    keepAliveInterval = int.parse(value);
                                   } on Exception catch (e) {
                                     // TODO
                                     setState(() {
-                                      autoOffBatt = 0;
+                                      keepAliveInterval = 0;
                                     });
                                     print(value);
                                     print(e);
@@ -246,19 +295,20 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       width: 200,
                       child: TextField(
                         // maxLength: 3,
-                        controller: cmdTextController,
-                        keyboardType: TextInputType.number,
+                        // controller: cmdTextController,
+                        // keyboardType: TextInputType.number,
+                        obscureText: true,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
                               try {
-                                autoOffBatt = int.parse(value);
+                                MQTT_pass = value;
                               } on Exception catch (e) {
                                 // TODO
                                 setState(() {
-                                  autoOffBatt = 0;
+                                  MQTT_pass = "";
                                 });
                                 print(value);
                                 print(e);
@@ -282,19 +332,19 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       width: 75,
                       child: TextField(
                         // maxLength: 3,
-                        controller: cmdTextController,
-                        keyboardType: TextInputType.number,
+                        // controller: cmdTextController,
+                        // keyboardType: TextInputType.number,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
                               try {
-                                autoOffBatt = int.parse(value);
+                                MQTT_cmd1 = value;
                               } on Exception catch (e) {
                                 // TODO
                                 setState(() {
-                                  autoOffBatt = 0;
+                                  MQTT_cmd1 = "";
                                 });
                                 print(value);
                                 print(e);
@@ -312,19 +362,19 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       width: 75,
                       child: TextField(
                         // maxLength: 3,
-                        controller: cmdTextController,
-                        keyboardType: TextInputType.number,
+                        // controller: cmdTextController,
+                        // keyboardType: TextInputType.number,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
                               try {
-                                autoOffBatt = int.parse(value);
+                                MQTT_url1 = value;
                               } on Exception catch (e) {
                                 // TODO
                                 setState(() {
-                                  autoOffBatt = 0;
+                                  MQTT_url1 = "";
                                 });
                                 print(value);
                                 print(e);
@@ -351,19 +401,19 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       width: 75,
                       child: TextField(
                         // maxLength: 3,
-                        controller: cmdTextController,
-                        keyboardType: TextInputType.number,
+                        // controller: cmdTextController,
+                        // keyboardType: TextInputType.number,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
                               try {
-                                autoOffBatt = int.parse(value);
+                                MQTT_cmd2 = value;
                               } on Exception catch (e) {
                                 // TODO
                                 setState(() {
-                                  autoOffBatt = 0;
+                                  MQTT_cmd2 = "";
                                 });
                                 print(value);
                                 print(e);
@@ -381,19 +431,19 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       width: 75,
                       child: TextField(
                         // maxLength: 3,
-                        controller: cmdTextController,
-                        keyboardType: TextInputType.number,
+                        // controller: cmdTextController,
+                        // keyboardType: TextInputType.number,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
                               try {
-                                autoOffBatt = int.parse(value);
+                                MQTT_url2 = value;
                               } on Exception catch (e) {
                                 // TODO
                                 setState(() {
-                                  autoOffBatt = 0;
+                                  MQTT_url2 = "";
                                 });
                                 print(value);
                                 print(e);
@@ -420,19 +470,19 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       width: 100,
                       child: TextField(
                         // maxLength: 3,
-                        controller: cmdTextController,
-                        keyboardType: TextInputType.number,
+                        // controller: cmdTextController,
+                        // keyboardType: TextInputType.number,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
                               try {
-                                autoOffBatt = int.parse(value);
+                                triggerURL = value;
                               } on Exception catch (e) {
                                 // TODO
                                 setState(() {
-                                  autoOffBatt = 0;
+                                  triggerURL = "";
                                 });
                                 print(value);
                                 print(e);
@@ -488,19 +538,19 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       width: 100,
                       child: TextField(
                         // maxLength: 3,
-                        controller: cmdTextController,
-                        keyboardType: TextInputType.number,
+                        // controller: cmdTextController,
+                        // keyboardType: TextInputType.number,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
                           if (value != null) {
                             setState(() {
                               try {
-                                autoOffBatt = int.parse(value);
+                                cmdToDropMarble = value;
                               } on Exception catch (e) {
                                 // TODO
                                 setState(() {
-                                  autoOffBatt = 0;
+                                  cmdToDropMarble = "";
                                 });
                                 print(value);
                                 print(e);
@@ -563,7 +613,7 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       color: Colors.green[800],
                       title: "Save",
                       onClick: () {
-                        // Navigator.pop(context);
+                        saveSettings();
                       },
                     ),
                   ],
@@ -636,8 +686,8 @@ class CheckedBox extends StatelessWidget {
             border: Border.all(width: 2, color: Colors.black),
             // color: Colors.green[800],
           ),
-          height: 20,
-          width: 20,
+          height: 30,
+          width: 30,
           child: Icon(
             Icons.check_circle,
             color: Colors.green,
@@ -662,8 +712,8 @@ class UnCheckedBox extends StatelessWidget {
             border: Border.all(width: 2, color: Colors.black),
             // color: Colors.white,
           ),
-          height: 20,
-          width: 20,
+          height: 30,
+          width: 30,
           child: Icon(
             Icons.cancel_rounded,
             color: Colors.red[900],

@@ -8,6 +8,8 @@ import '../../constants.dart';
 import 'package:localstore/localstore.dart';
 import 'dart:io';
 import 'package:localstorage/localstorage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class StarterCommonSettings extends StatefulWidget {
   // StarterCommonSettings({Key? key}) : super(key: key);
@@ -18,18 +20,22 @@ class StarterCommonSettings extends StatefulWidget {
 }
 
 class _CommonSettingsState extends State<StarterCommonSettings> {
+  bool loading = false;
   List<RGBColor> colors = [];
   List<Widget> idleArrowBoxes = [];
   List<Widget> dropArrowBoxes = [];
   TextEditingController cmdTextController;
+  String starter_ip;
 
-  String idleActiveColor;
-  String dropActiveColor;
-  bool beatingLEDactive;
-  bool autoOffSoundActive;
-  int dropMarbleSound;
-  double wheelSpeed = 0;
-  String name;
+  String idleActiveColor = "";
+  String dropActiveColor = "";
+  RGBColor idleColor = new RGBColor(name: 'red', red: 255, green: 0, blue: 0);
+  RGBColor dropColor = new RGBColor(name: 'red', red: 255, green: 0, blue: 0);
+  bool beatingLEDactive = false;
+  bool autoOffSoundActive = false;
+  int dropMarbleSound = 0;
+  double wheelSpeed = 1;
+  String name = "";
 
   BoxDecoration inactiveBox = BoxDecoration(
       border: Border.all(
@@ -150,7 +156,48 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
 
   @override
   Widget build(BuildContext context) {
+    final arguments = ModalRoute.of(context).settings.arguments as Map;
+    setState(() {
+      starter_ip = arguments['starter_ip'];
+    });
+    List<String> settings_commands = [
+      "http://$starter_ip/control?command=breating_active&state=${beatingLEDactive == true ? 1 : 0}",
+      "http://$starter_ip/control?command=arrow_color_idle&R=${idleColor.red}&G=${idleColor.green}&B=${idleColor.blue}",
+      "http://$starter_ip/control?command=arrow_color_dropmarble&R=${dropColor.red}&G=${dropColor.green}&B=${dropColor.blue}",
+      "http://$starter_ip/control?command=dropmarble_sound&state=$dropMarbleSound",
+      "http://$starter_ip/control?command=auto_off_sound&state=${autoOffSoundActive == true ? 1 : 0}",
+      "http://$starter_ip/control?command=wheel_speed&data=$wheelSpeed",
+      "http://$starter_ip/control?command=device_name&data=$name"
+    ];
     addColors();
+    saveSettings() async {
+      setState(() {
+        loading = true;
+      });
+      try {
+        settings_commands.forEach((element) async {
+          var url = Uri.parse(element.trim());
+          http.Response res = await http.get(url);
+          if (res.statusCode == 200) {
+            print("OK Cmd = $element");
+          } else {
+            print("Failed Cmd = $element");
+          }
+        });
+        setState(() {
+          loading = false;
+        });
+        displaySnackBar("Settings Updated");
+        Navigator.pop(context);
+      } on Exception catch (e) {
+        print(e);
+        setState(() {
+          loading = false;
+        });
+        displaySnackBar("Error in Updating Settings");
+      }
+    }
+
     return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -239,6 +286,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 idleActiveColor = colors[0].name;
+                                idleColor = colors[0];
                               });
                               print(
                                   "$idleActiveColor = ${colors[0].name} Selected");
@@ -259,6 +307,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 idleActiveColor = colors[1].name;
+                                idleColor = colors[1];
                               });
                               print(
                                   "$idleActiveColor = ${colors[1].name} Selected");
@@ -279,6 +328,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 idleActiveColor = colors[2].name;
+                                idleColor = colors[2];
                               });
                               print(
                                   "$idleActiveColor = ${colors[2].name} Selected");
@@ -299,6 +349,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 idleActiveColor = colors[3].name;
+                                idleColor = colors[3];
                               });
                               print(
                                   "$idleActiveColor = ${colors[3].name} Selected");
@@ -319,6 +370,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 idleActiveColor = colors[4].name;
+                                idleColor = colors[4];
                               });
                               print(
                                   "$idleActiveColor = ${colors[4].name} Selected");
@@ -339,6 +391,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 idleActiveColor = colors[5].name;
+                                idleColor = colors[5];
                               });
                               print(
                                   "$idleActiveColor = ${colors[5].name} Selected");
@@ -359,6 +412,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 idleActiveColor = colors[6].name;
+                                idleColor = colors[6];
                               });
                               print(
                                   "$idleActiveColor = ${colors[6].name} Selected");
@@ -397,6 +451,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 dropActiveColor = colors[0].name;
+                                dropColor = colors[0];
                               });
                             },
                             child: Container(
@@ -415,6 +470,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 dropActiveColor = colors[1].name;
+                                dropColor = colors[1];
                               });
                             },
                             child: Container(
@@ -433,6 +489,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 dropActiveColor = colors[2].name;
+                                dropColor = colors[2];
                               });
                             },
                             child: Container(
@@ -451,6 +508,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 dropActiveColor = colors[3].name;
+                                dropColor = colors[3];
                               });
                             },
                             child: Container(
@@ -469,6 +527,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 dropActiveColor = colors[4].name;
+                                dropColor = colors[4];
                               });
                             },
                             child: Container(
@@ -487,6 +546,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 dropActiveColor = colors[5].name;
+                                dropColor = colors[5];
                               });
                             },
                             child: Container(
@@ -505,6 +565,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                             onTap: () {
                               setState(() {
                                 dropActiveColor = colors[6].name;
+                                dropColor = colors[6];
                               });
                             },
                             child: Container(
@@ -662,9 +723,9 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                         ),
                         child: Slider(
                           value: wheelSpeed,
-                          min: 0,
+                          min: 1,
                           max: 3,
-                          divisions: 3,
+                          divisions: 2,
                           label: '$wheelSpeed',
                           onChanged: (value) {
                             setState(
@@ -718,14 +779,17 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                       title: "Advanced Settings",
                       onClick: () {
                         Navigator.popAndPushNamed(
-                            context, StarterAdvancedSettings.id);
+                          context,
+                          StarterAdvancedSettings.id,
+                          arguments: {'starter_ip': starter_ip},
+                        );
                       },
                     ),
                     RoundedButton(
                       color: Colors.green[800],
                       title: "Save",
                       onClick: () {
-                        // Navigator.pop(context);
+                        saveSettings();
                       },
                     ),
                   ],
@@ -781,10 +845,14 @@ class CheckedBox extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             border: Border.all(width: 2, color: Colors.black),
-            color: Colors.green[800],
+            // color: Colors.green[800],
           ),
-          height: 20,
-          width: 20,
+          height: 30,
+          width: 30,
+          child: Icon(
+            Icons.check_circle,
+            color: Colors.green,
+          ),
         ),
         title == null ? Container() : BoldInfoText(text: title),
       ],
@@ -803,10 +871,14 @@ class UnCheckedBox extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             border: Border.all(width: 2, color: Colors.black),
-            color: Colors.white,
+            // color: Colors.white,
           ),
-          height: 20,
-          width: 20,
+          height: 30,
+          width: 30,
+          child: Icon(
+            Icons.cancel_rounded,
+            color: Colors.red[900],
+          ),
         ),
         title == null ? Container() : BoldInfoText(text: title),
       ],

@@ -6,9 +6,11 @@ import './screens/command_screen.dart';
 import 'screens/setting_screens/starter_common_settings.dart';
 import './screens/setting_screens/starter_advanced_settings.dart';
 import './screens/global_settings.dart';
+import './utilities/messageRecvr.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
   runApp(MyApp());
 }
 
@@ -16,6 +18,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    MessageRecvr recvr = MessageRecvr();
+    recvr.startListeningForMessages();
     return MaterialApp(
       title: 'Marbellous MVP',
       theme: ThemeData(

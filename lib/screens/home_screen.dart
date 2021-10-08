@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:marbelous_esp32_app/screens/add_device_screen.dart';
 import 'package:marbelous_esp32_app/screens/global_settings.dart';
@@ -23,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  HashMap devicesMap = new HashMap<String, MarbleDevice>();
   List<MarbleDevice> devices = [];
   bool isScanning = true;
   bool starterFound = false;
@@ -48,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ipAddrr: value['ip'],
             type: value['type'],
             docID: key);
+        devicesMap[device.type] = device;
         // var idx = devices.indexOf(device);
 
         setState(() {
@@ -64,6 +68,21 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       isScanning = false;
     });
+  }
+
+  displaySnackBar(String message) {
+    final snackBar = SnackBar(
+      content: Text(message),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    scanNetwork();
   }
 
   Widget getCurrentWidget() {
@@ -85,20 +104,119 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         break;
       case "starter":
-        return StarterCard(
-            title: "Starter", icon: "assets/img/starter.png", type: "starter");
+        if (devicesMap.containsKey("starter")) {
+          return StarterCard(
+              title: "Starter",
+              icon: "assets/img/starter.png",
+              type: "starter");
+        } else {
+          return GestureDetector(
+              onTap: () {
+                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                    arguments: {'deviceType': "starter"});
+              },
+              child: Text(
+                "Device NOT Found. Click to Add",
+                style: subheadingText,
+                textAlign: TextAlign.center,
+              ));
+        }
         break;
       case 'finisher':
+        if (devicesMap.containsKey("finisher")) {
+          return BoldInfoText(text: "Device Card Not Ready Yet");
+        } else {
+          return GestureDetector(
+              onTap: () {
+                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                    arguments: {'deviceType': "finisher"});
+              },
+              child: Text(
+                "Device NOT Found. Click to Add",
+                style: subheadingText,
+                textAlign: TextAlign.center,
+              ));
+        }
         break;
       case 'wheel':
+        if (devicesMap.containsKey("wheel")) {
+          return BoldInfoText(text: "Device Card Not Ready Yet");
+        } else {
+          return GestureDetector(
+              onTap: () {
+                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                    arguments: {'deviceType': "wheel"});
+              },
+              child: Text(
+                "Device NOT Found. Click to Add",
+                style: subheadingText,
+                textAlign: TextAlign.center,
+              ));
+        }
         break;
       case 'spiral':
+        if (devicesMap.containsKey("spiral")) {
+          return BoldInfoText(text: "Device Card Not Ready Yet");
+        } else {
+          return GestureDetector(
+              onTap: () {
+                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                    arguments: {'deviceType': "spiral"});
+              },
+              child: Text(
+                "Device NOT Found. Click to Add",
+                style: subheadingText,
+                textAlign: TextAlign.center,
+              ));
+        }
         break;
       case 'teleport1':
+        if (devicesMap.containsKey("teleport1")) {
+          return BoldInfoText(text: "Device Card Not Ready Yet");
+        } else {
+          return GestureDetector(
+              onTap: () {
+                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                    arguments: {'deviceType': "teleport1"});
+              },
+              child: Text(
+                "Device NOT Found. Click to Add",
+                style: subheadingText,
+                textAlign: TextAlign.center,
+              ));
+        }
         break;
       case 'teleport2':
+        if (devicesMap.containsKey("teleport2")) {
+          return BoldInfoText(text: "Device Card Not Ready Yet");
+        } else {
+          return GestureDetector(
+              onTap: () {
+                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                    arguments: {'deviceType': "teleport2"});
+              },
+              child: Text(
+                "Device NOT Found. Click to Add",
+                style: subheadingText,
+                textAlign: TextAlign.center,
+              ));
+        }
         break;
       case 'switch':
+        if (devicesMap.containsKey("switch")) {
+          return BoldInfoText(text: "Device Card Not Ready Yet");
+        } else {
+          return GestureDetector(
+              onTap: () {
+                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                    arguments: {'deviceType': "switch"});
+              },
+              child: Text(
+                "Device NOT Found. Click to Add",
+                style: subheadingText,
+                textAlign: TextAlign.center,
+              ));
+        }
         break;
       default:
         return Text(
@@ -107,13 +225,6 @@ class _HomeScreenState extends State<HomeScreen> {
           textAlign: TextAlign.center,
         );
     }
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    scanNetwork();
   }
 
   @override
@@ -187,6 +298,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: DeviceIcon(
                                   deviceType: 'starter',
                                   icon: 'starter.png',
+                                  device_ip: devicesMap.containsKey("starter")
+                                      ? devicesMap["starter"].ipAddrr
+                                      : null,
                                 ),
                               ),
 
@@ -200,6 +314,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: DeviceIcon(
                                   deviceType: 'finisher',
                                   icon: 'finisher.png',
+                                  device_ip: devicesMap.containsKey("finisher")
+                                      ? devicesMap["finisher"].ipAddrr
+                                      : null,
                                 ),
                               ),
 
@@ -213,6 +330,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: DeviceIcon(
                                   deviceType: 'wheel',
                                   icon: 'wheel.png',
+                                  device_ip: devicesMap.containsKey("wheel")
+                                      ? devicesMap["wheel"].ipAddrr
+                                      : null,
                                 ),
                               ),
 
@@ -226,6 +346,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: DeviceIcon(
                                   deviceType: 'spiral',
                                   icon: 'spiral.png',
+                                  device_ip: devicesMap.containsKey("spiral")
+                                      ? devicesMap["spiral"].ipAddrr
+                                      : null,
                                 ),
                               ),
                             ],
@@ -246,6 +369,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: DeviceIcon(
                                   deviceType: 'teleport1',
                                   icon: 'teleporter1.png',
+                                  device_ip: devicesMap.containsKey("teleport1")
+                                      ? devicesMap["teleport1"].ipAddrr
+                                      : null,
                                 ),
                               ),
 
@@ -259,6 +385,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: DeviceIcon(
                                   deviceType: 'teleport2',
                                   icon: 'teleporter2.png',
+                                  device_ip: devicesMap.containsKey("teleport2")
+                                      ? devicesMap["teleport2"].ipAddrr
+                                      : null,
                                 ),
                               ),
 
@@ -272,6 +401,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: DeviceIcon(
                                   deviceType: 'switch',
                                   icon: 'switch.png',
+                                  device_ip: devicesMap.containsKey("switch")
+                                      ? devicesMap["switch"].ipAddrr
+                                      : null,
                                 ),
                               ),
                             ],
@@ -294,10 +426,11 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class DeviceIcon extends StatelessWidget {
-  DeviceIcon({this.deviceType, this.icon});
+  DeviceIcon({this.deviceType, this.icon, this.device_ip});
 
   final String deviceType;
   final String icon;
+  final String device_ip;
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +445,12 @@ class DeviceIcon extends StatelessWidget {
     openSettings(String deviceType) {
       switch (deviceType) {
         case 'starter':
-          Navigator.pushNamed(context, StarterCommonSettings.id);
+          if (device_ip == null) {
+            displaySnackBar("Device IP Not Present");
+          } else {
+            Navigator.pushNamed(context, StarterCommonSettings.id,
+                arguments: {'starter_ip': device_ip});
+          }
           break;
         case 'finisher':
           break;
@@ -367,6 +505,21 @@ class DeviceIcon extends StatelessWidget {
           height: 50,
         ),
       ),
+    );
+  }
+}
+
+class BoldInfoText extends StatelessWidget {
+  final String text;
+  BoldInfoText({this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      softWrap: true,
+      style: boldInfoText,
+      // textAlign: TextAlign.justify,
     );
   }
 }
