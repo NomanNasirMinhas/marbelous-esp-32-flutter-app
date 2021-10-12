@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
     MessageRecvr recvr = MessageRecvr();
     recvr.startListeningForMessages();
     return MaterialApp(
-      title: 'Marbellous MVP',
+      title: 'Marblelous MVP',
       theme: ThemeData(
         primarySwatch: Colors.teal,
       ),

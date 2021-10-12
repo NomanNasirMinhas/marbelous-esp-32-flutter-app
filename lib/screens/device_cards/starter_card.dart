@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:marbelous_esp32_app/screens/home_screen.dart';
 import './../../components/round_button.dart';
 import './../../constants.dart';
 import './../../components/device_card.dart';
 import 'package:http/http.dart' as http;
+import 'dart:async';
 
 class StarterCard extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
@@ -19,21 +21,23 @@ class StarterCard extends StatefulWidget {
 
 class _StarterCardState extends State<StarterCard> {
   //Starter Data
-  int dropMarbles = 0;
-  int dropMarbleInterval = 0;
+  int dropMarbles = 1;
+  int dropMarbleInterval = 1;
 
   dropMarble() async {
     print(widget.ip);
     try {
       var url = Uri.parse(
           "http://${widget.ip}/control?command=drop_marble_${dropMarbles}x${dropMarbleInterval}_");
-      http.Response res = await http.get(url);
-      if (res.statusCode == 200) {
+      http.Response res = await http.get(url).timeout(Duration(seconds: 3));
+      if (res.statusCode == 200 && res.body == "OK") {
         displaySnackBar("Command Sent Successfully");
       } else {
         displaySnackBar("Command Sending Failed");
       }
-    } on Exception catch (e) {
+    } on TimeoutException catch (e) {
+      displaySnackBar("Command Timeout");
+    } on Error catch (e) {
       print(e);
       displaySnackBar("Command Sending Error");
     }
@@ -57,6 +61,8 @@ class _StarterCardState extends State<StarterCard> {
           },
         ),
         SizedBox(height: 10),
+        BoldInfoText(text: "Count"),
+        SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -64,7 +70,7 @@ class _StarterCardState extends State<StarterCard> {
               title: " - ",
               color: Colors.blue[300],
               onClick: () {
-                if (dropMarbles > 0) {
+                if (dropMarbles > 1) {
                   setState(() {
                     dropMarbles--;
                   });
@@ -91,6 +97,8 @@ class _StarterCardState extends State<StarterCard> {
           ],
         ),
         SizedBox(height: 10),
+        BoldInfoText(text: "Interval"),
+        SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -98,7 +106,7 @@ class _StarterCardState extends State<StarterCard> {
               title: " - ",
               color: Colors.blue[300],
               onClick: () {
-                if (dropMarbleInterval > 0) {
+                if (dropMarbleInterval > 1) {
                   setState(() {
                     dropMarbleInterval--;
                   });

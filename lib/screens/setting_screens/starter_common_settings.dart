@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:localstorage/localstorage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 
 class StarterCommonSettings extends StatefulWidget {
   // StarterCommonSettings({Key? key}) : super(key: key);
@@ -170,14 +171,46 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
       "http://$starter_ip/control?command=device_name&data=$name"
     ];
     addColors();
+
+    Future<void> storeSettings() async {
+      try {
+        final db = Localstore.instance;
+
+        await db
+            .collection('starter_common_settings')
+            .doc('starter_common_settings')
+            .set({
+          'beatingLEDactive': beatingLEDactive,
+          // 'idleColor': new RGBColor(
+          //     blue: idleColor.blue,
+          //     red: idleColor.red,
+          //     green: idleColor.green,
+          //     name: "arrow_color_idle"),
+          // 'dropColor': new RGBColor(
+          //     blue: dropColor.blue,
+          //     red: dropColor.red,
+          //     green: dropColor.green,
+          //     name: "arrow_color_dropmarble"),
+          'dropMarbleSound': dropMarbleSound,
+          'autoOffSoundActive': autoOffSoundActive,
+          'wheelSpeed': wheelSpeed,
+          'name': name
+        });
+      } on Exception catch (e) {
+        print(e.toString());
+        cancel();
+      }
+    }
+
     saveSettings() async {
       setState(() {
         loading = true;
       });
+      await storeSettings();
       try {
         settings_commands.forEach((element) async {
           var url = Uri.parse(element.trim());
-          http.Response res = await http.get(url);
+          http.Response res = await http.get(url).timeout(Duration(seconds: 3));
           if (res.statusCode == 200) {
             print("OK Cmd = $element");
           } else {
@@ -189,7 +222,9 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
         });
         displaySnackBar("Settings Updated");
         Navigator.pop(context);
-      } on Exception catch (e) {
+      } on TimeoutException catch (e) {
+        displaySnackBar("Command Timeout");
+      } on Error catch (e) {
         print(e);
         setState(() {
           loading = false;

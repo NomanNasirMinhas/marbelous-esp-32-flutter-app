@@ -32,17 +32,31 @@ class _HomeScreenState extends State<HomeScreen> {
   String currentWidget = "none";
   String selectedDevice;
   String starterIP;
-
-
-
+  String starterName;
+  dynamic starter_common_settings;
+  dynamic starter_advanced_settings;
 
   scanNetwork() async {
+    final db = Localstore.instance;
+    print("Getting Starter Settings");
+
+    var common = await db
+        .collection('starter_common_settings')
+        .doc("starter_common_settings")
+        .get();
+    var advanced = await db
+        .collection('starter_advanced_settings')
+        .doc("starter_advanced_settings")
+        .get();
     setState(() {
       isScanning = true;
       devices = [];
+      starter_common_settings = common;
+      starter_advanced_settings = advanced;
     });
+
     print("Scanning Network");
-    final db = Localstore.instance;
+
     final items = await db.collection('marbelous_devices').get();
     if (items == null) {
       print("No Devices Found");
@@ -111,10 +125,12 @@ class _HomeScreenState extends State<HomeScreen> {
       case "starter":
         if (devicesMap.containsKey("starter")) {
           return StarterCard(
-              title: "Starter",
-              icon: "assets/img/starter.png",
-              type: "starter",
-              ip: starterIP,);
+            title:
+                "Starter (${starter_common_settings == null ? "Name Not Set" : starter_common_settings['name']})",
+            icon: "assets/img/starter.png",
+            type: "starter",
+            ip: starterIP,
+          );
         } else {
           return GestureDetector(
               onTap: () {
@@ -258,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
               title: Text(
-                "Marbellous Home",
+                "Marblelous Home",
                 style: TextStyle(
                   color: Colors.white,
                   fontFamily: 'Scheherazade',
@@ -273,10 +289,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Text(
-                      "Marbelous Icon Goes Here",
-                      style: headingText,
-                      textAlign: TextAlign.center,
+                    new Image.asset(
+                      'assets/img/logo.jpeg',
+                      fit: BoxFit.contain,
                     ),
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 10),

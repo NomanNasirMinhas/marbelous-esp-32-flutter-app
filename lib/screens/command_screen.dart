@@ -171,7 +171,7 @@ class _CommandScreenState extends State<CommandScreen> {
           child: Scaffold(
             appBar: AppBar(
               title: Text(
-                "Marbellous MVP",
+                "Marblelous MVP",
                 style: TextStyle(
                   color: Colors.white,
                   fontFamily: 'Bebas',

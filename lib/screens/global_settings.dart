@@ -29,7 +29,23 @@ class _GlobalSettingsState extends State<GlobalSettings> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
+  Future<void> storeSettings() async {
+    try {
+      final db = Localstore.instance;
+
+      await db.collection('global_settings').doc('global_settings').set({
+        'wifi_ssd': wifi_ssd,
+        'wifi_password': wifi_password,
+        'hue_bridge_ip': hue_bridge_ip,
+      });
+    } on Exception catch (e) {
+      print(e.toString());
+      cancel();
+    }
+  }
+
   saveSettings() async {
+    await storeSettings();
     await db.collection('global_settings').doc("global_settings").set({
       'wifi_ssd': wifi_ssd,
       'wifi_password': wifi_password,

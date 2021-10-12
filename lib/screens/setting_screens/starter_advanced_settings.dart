@@ -10,6 +10,7 @@ import 'dart:io';
 import 'package:localstorage/localstorage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 
 class StarterAdvancedSettings extends StatefulWidget {
   // StarterAdvancedSettings({Key? key}) : super(key: key);
@@ -73,14 +74,42 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
       "http://$starter_ip/control?command=shutdown_alart_sound&state=${shutdownSoundEnabled == true ? 1 : 0}"
     ];
 
+    Future<void> storeSettings() async {
+      try {
+        final db = Localstore.instance;
+
+        await db
+            .collection('starter_advanced_settings')
+            .doc('starter_advanced_settings')
+            .set({
+          'autoOffBatt': autoOffBatt,
+          'autoOffUSB': autoOffUSB,
+          'keepAliveInterval': keepAliveInterval,
+          'MQTT_pass': MQTT_pass,
+          'MQTT_cmd1': MQTT_cmd1,
+          'MQTT_url1': MQTT_url1,
+          'MQTT_cmd2': MQTT_cmd2,
+          'MQTT_url2': MQTT_url2,
+          'triggerURL': triggerURL,
+          'wifiEnabled': wifiEnabled,
+          'cmdToDropMarble': cmdToDropMarble,
+          'shutdownSoundEnabled': shutdownSoundEnabled,
+        });
+      } on Exception catch (e) {
+        print(e.toString());
+        cancel();
+      }
+    }
+
     saveSettings() async {
       setState(() {
         loading = true;
       });
+      await storeSettings();
       try {
         settings_commands.forEach((element) async {
           var url = Uri.parse(element.trim());
-          http.Response res = await http.get(url);
+          http.Response res = await http.get(url).timeout(Duration(seconds: 3));
           if (res.statusCode == 200) {
             print("OK Cmd = $element");
           } else {
@@ -92,7 +121,9 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
         });
         displaySnackBar("Settings Updated");
         Navigator.pop(context);
-      } on Exception catch (e) {
+      } on TimeoutException catch (e) {
+        displaySnackBar("Command Timeout");
+      } on Error catch (e) {
         print(e);
         setState(() {
           loading = false;
