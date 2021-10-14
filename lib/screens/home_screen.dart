@@ -17,6 +17,7 @@ import './../utilities/device_class.dart';
 import './device_cards/starter_card.dart';
 import './../components/device_icon.dart';
 import 'package:cool_alert/cool_alert.dart';
+import 'package:app_settings/app_settings.dart';
 
 class HomeScreen extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
@@ -98,6 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
           confirmBtnText: "Yes",
           onConfirmBtnTap: () {
             Navigator.pop(context);
+            // displaySnackBar("Please Connect to Device Wifi");
+            AppSettings.openWIFISettings();
             Navigator.popAndPushNamed(context, AddDeviceScreen.id,
                 arguments: {'deviceType': "starter"});
           },

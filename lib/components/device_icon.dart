@@ -6,6 +6,7 @@ import 'package:localstore/localstore.dart';
 import 'package:udp/udp.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:cool_alert/cool_alert.dart';
+import 'package:app_settings/app_settings.dart';
 
 class DeviceIcon extends StatefulWidget {
   // const DeviceIcon({ Key? key }) : super(key: key);
@@ -27,16 +28,21 @@ class _DeviceIconState extends State<DeviceIcon> {
   int battery = -1;
   DateTime lastStatusOn = DateTime.now();
   Duration diff;
+  bool keepChecking = true;
   startCheckingStatus() async {
-    while (true) {
-      diff = DateTime.now().difference(lastStatusOn);
-      if (diff > Duration(seconds: 5)) {
-        setState(() {
-          isOnline = false;
-          // print("$deviceType is Offline Now");
-        });
+    try {
+      while (keepChecking && mounted) {
+        diff = DateTime.now().difference(lastStatusOn);
+        if (diff > Duration(seconds: 5)) {
+          setState(() {
+            isOnline = false;
+            // print("$deviceType is Offline Now");
+          });
+        }
+        await Future.delayed(Duration(seconds: 5));
       }
-      await Future.delayed(Duration(seconds: 5));
+    } on Exception catch (e) {
+      // TODO
     }
   }
 
@@ -136,6 +142,7 @@ class _DeviceIconState extends State<DeviceIcon> {
             print("Forgetting MAC $id");
             await db.collection('marbelous_devices').doc(id).delete();
             displaySnackBar("Forgot $name Device");
+
             Navigator.popAndPushNamed(context, HomeScreen.id);
           }
         });
@@ -155,6 +162,8 @@ class _DeviceIconState extends State<DeviceIcon> {
               confirmBtnText: "Yes",
               onConfirmBtnTap: () {
                 Navigator.pop(context);
+                // displaySnackBar("Please Connect to Device Wifi");
+                AppSettings.openWIFISettings();
                 Navigator.popAndPushNamed(context, AddDeviceScreen.id,
                     arguments: {'deviceType': deviceType});
               },
