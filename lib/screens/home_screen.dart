@@ -15,6 +15,8 @@ import 'dart:convert';
 import 'package:localstore/localstore.dart';
 import './../utilities/device_class.dart';
 import './device_cards/starter_card.dart';
+import './../components/device_icon.dart';
+import 'package:cool_alert/cool_alert.dart';
 
 class HomeScreen extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
@@ -87,6 +89,23 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       isScanning = false;
     });
+    if (starterFound == false) {
+      CoolAlert.show(
+          context: context,
+          type: CoolAlertType.confirm,
+          title: "Starter Not Found",
+          text: "Would You like Add it now?",
+          confirmBtnText: "Yes",
+          onConfirmBtnTap: () {
+            Navigator.pop(context);
+            Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                arguments: {'deviceType': "starter"});
+          },
+          cancelBtnText: "Later",
+          onCancelBtnTap: () {
+            Navigator.pop(context);
+          });
+    }
   }
 
   displaySnackBar(String message) {
@@ -285,17 +304,20 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             body: Center(
               child: Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: ListView(
                   children: <Widget>[
                     new Image.asset(
                       'assets/img/logo.jpeg',
                       fit: BoxFit.contain,
                     ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: getCurrentWidget(),
+                    StarterCard(
+                      title:
+                          "Starter (${starter_common_settings == null ? "Name Not Set" : starter_common_settings['name']})",
+                      icon: "assets/img/starter.png",
+                      type: "starter",
+                      ip: starterIP,
+                      hasFinisher: !devicesMap.containsKey('finisher'),
+                      hasSwitch: !devicesMap.containsKey('switch'),
                     ),
                     Container(
                       decoration: sectionCard,
@@ -322,6 +344,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   device_ip: devicesMap.containsKey("starter")
                                       ? devicesMap["starter"].ipAddrr
                                       : null,
+                                  isAdded: devicesMap.containsKey("starter")
+                                      ? true
+                                      : false,
                                 ),
                               ),
 
@@ -338,6 +363,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   device_ip: devicesMap.containsKey("finisher")
                                       ? devicesMap["finisher"].ipAddrr
                                       : null,
+                                  isAdded: devicesMap.containsKey("finisher")
+                                      ? true
+                                      : false,
                                 ),
                               ),
 
@@ -354,6 +382,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   device_ip: devicesMap.containsKey("wheel")
                                       ? devicesMap["wheel"].ipAddrr
                                       : null,
+                                  isAdded: devicesMap.containsKey("wheel")
+                                      ? true
+                                      : false,
                                 ),
                               ),
 
@@ -370,6 +401,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   device_ip: devicesMap.containsKey("spiral")
                                       ? devicesMap["spiral"].ipAddrr
                                       : null,
+                                  isAdded: devicesMap.containsKey("spiral")
+                                      ? true
+                                      : false,
                                 ),
                               ),
                             ],
@@ -393,6 +427,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   device_ip: devicesMap.containsKey("teleport1")
                                       ? devicesMap["teleport1"].ipAddrr
                                       : null,
+                                  isAdded: devicesMap.containsKey("teleport1")
+                                      ? true
+                                      : false,
                                 ),
                               ),
 
@@ -409,6 +446,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   device_ip: devicesMap.containsKey("teleport2")
                                       ? devicesMap["teleport2"].ipAddrr
                                       : null,
+                                  isAdded: devicesMap.containsKey("teleport2")
+                                      ? true
+                                      : false,
                                 ),
                               ),
 
@@ -425,6 +465,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   device_ip: devicesMap.containsKey("switch")
                                       ? devicesMap["switch"].ipAddrr
                                       : null,
+                                  isAdded: devicesMap.containsKey("switch")
+                                      ? true
+                                      : false,
                                 ),
                               ),
                             ],
@@ -440,90 +483,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class DeviceIcon extends StatelessWidget {
-  DeviceIcon({this.deviceType, this.icon, this.device_ip});
-
-  final String deviceType;
-  final String icon;
-  final String device_ip;
-
-  @override
-  Widget build(BuildContext context) {
-    displaySnackBar(String message) {
-      final snackBar = SnackBar(
-        content: Text(message),
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    }
-
-    openSettings(String deviceType) {
-      switch (deviceType) {
-        case 'starter':
-          if (device_ip == null) {
-            displaySnackBar("Device IP Not Present");
-          } else {
-            Navigator.pushNamed(context, StarterCommonSettings.id,
-                arguments: {'starter_ip': device_ip});
-          }
-          break;
-        case 'finisher':
-          break;
-        case 'wheel':
-          break;
-        case 'spiral':
-          break;
-        case 'teleport1':
-          break;
-        case 'teleport2':
-          break;
-        case 'switch':
-          break;
-        default:
-          displaySnackBar("Invalid Device Selected");
-          break;
-      }
-    }
-
-    forgetDevice(String deviceType) async {
-      final db = Localstore.instance;
-      final devices = await db.collection('marbelous_devices').get();
-      print(devices);
-      if (devices != null) {
-        devices.forEach((key, value) async {
-          if (value['type'] == deviceType) {
-            var id = value['macAddrr'].split("/").last;
-            var name = value['name'];
-            print("Forgetting MAC $id");
-            await db.collection('marbelous_devices').doc(id).delete();
-            displaySnackBar("Forgot $name Device");
-            Navigator.popAndPushNamed(context, HomeScreen.id);
-          }
-        });
-      }
-    }
-
-    return GestureDetector(
-      onLongPress: () {
-        forgetDevice(deviceType);
-      },
-      onDoubleTap: () {
-        openSettings(deviceType);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[700], width: 2),
-        ),
-        child: new Image.asset(
-          'assets/img/$icon',
-          width: 50,
-          height: 50,
         ),
       ),
     );
