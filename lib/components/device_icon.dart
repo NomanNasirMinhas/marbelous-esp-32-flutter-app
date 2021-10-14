@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:marbelous_esp32_app/screens/add_device_screen.dart';
 import 'package:marbelous_esp32_app/screens/home_screen.dart';
 import 'package:marbelous_esp32_app/screens/setting_screens/starter_common_settings.dart';
 import 'package:localstore/localstore.dart';
 import 'package:udp/udp.dart';
 import 'package:network_info_plus/network_info_plus.dart';
+import 'package:cool_alert/cool_alert.dart';
 
 class DeviceIcon extends StatefulWidget {
   // const DeviceIcon({ Key? key }) : super(key: key);
@@ -31,7 +33,7 @@ class _DeviceIconState extends State<DeviceIcon> {
       if (diff > Duration(seconds: 5)) {
         setState(() {
           isOnline = false;
-          print("$deviceType is Offline Now");
+          // print("$deviceType is Offline Now");
         });
       }
       await Future.delayed(Duration(seconds: 5));
@@ -141,8 +143,42 @@ class _DeviceIconState extends State<DeviceIcon> {
     }
 
     return GestureDetector(
+      onTap: () {
+        if (isAdded) {
+          openSettings(deviceType);
+        } else {
+          CoolAlert.show(
+              context: context,
+              type: CoolAlertType.confirm,
+              title: "Device Not Found",
+              text: "Would You like Add it now?",
+              confirmBtnText: "Yes",
+              onConfirmBtnTap: () {
+                Navigator.pop(context);
+                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+                    arguments: {'deviceType': deviceType});
+              },
+              cancelBtnText: "Later",
+              onCancelBtnTap: () {
+                Navigator.pop(context);
+              });
+        }
+      },
       onLongPress: () {
-        forgetDevice(deviceType);
+        CoolAlert.show(
+            context: context,
+            type: CoolAlertType.confirm,
+            title: "Forget Device?",
+            text: "Are you sure you want to forget this device?",
+            confirmBtnText: "Yes",
+            onConfirmBtnTap: () {
+              forgetDevice(deviceType);
+              Navigator.pop(context);
+            },
+            cancelBtnText: "No",
+            onCancelBtnTap: () {
+              Navigator.pop(context);
+            });
       },
       onDoubleTap: () {
         openSettings(deviceType);

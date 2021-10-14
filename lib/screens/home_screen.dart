@@ -333,11 +333,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               //Starter ICON
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    currentWidget = 'starter';
-                                  });
-                                },
                                 child: DeviceIcon(
                                   deviceType: 'starter',
                                   icon: 'starter.png',
@@ -352,11 +347,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               //Icon 2
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    currentWidget = 'finisher';
-                                  });
-                                },
                                 child: DeviceIcon(
                                   deviceType: 'finisher',
                                   icon: 'finisher.png',
@@ -371,11 +361,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               //Icon 3
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    currentWidget = 'wheel';
-                                  });
-                                },
                                 child: DeviceIcon(
                                   deviceType: 'wheel',
                                   icon: 'wheel.png',
@@ -390,11 +375,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               //Icon 4
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    currentWidget = 'spiral';
-                                  });
-                                },
                                 child: DeviceIcon(
                                   deviceType: 'spiral',
                                   icon: 'spiral.png',
@@ -416,11 +396,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               //Starter ICON
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    currentWidget = 'teleport1';
-                                  });
-                                },
                                 child: DeviceIcon(
                                   deviceType: 'teleport1',
                                   icon: 'teleporter1.png',
@@ -435,11 +410,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               //Icon 2
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    currentWidget = 'teleport2';
-                                  });
-                                },
                                 child: DeviceIcon(
                                   deviceType: 'teleport2',
                                   icon: 'teleporter2.png',
@@ -454,11 +424,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               //Icon 3
                               GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    currentWidget = 'switch';
-                                  });
-                                },
                                 child: DeviceIcon(
                                   deviceType: 'switch',
                                   icon: 'switch.png',
