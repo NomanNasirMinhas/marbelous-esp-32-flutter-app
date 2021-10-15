@@ -373,8 +373,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                                       children: [
                                         ElevatedButton(
                                           onPressed: () async {
-                                            var res = true;
-                                            // await getCurrentGlobalSettings();
+                                            var res =
+                                                await getCurrentGlobalSettings();
                                             if (res == true) {
                                               startUDPServer();
                                             } else {
