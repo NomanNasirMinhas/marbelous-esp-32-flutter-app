@@ -53,17 +53,47 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
 
   @override
   void initState() {
+    fetchCurrentSettings();
     super.initState();
   }
 
   fetchCurrentSettings() async {
-    var url =
-        Uri.parse("http://$starter_ip/control?command=getAdvancedSettings");
-    http.Response res = await http.get(url);
-    if (res.statusCode == 200) {
-      //advancedSettings=auto_off_battery:val,auto_off_usb:val,keep_alive:val,MQTT_password:val,MQTT_command1:val,MQTT_command1_url:val,MQTT_command2:val,MQTT_command2_url:val,trigger_url:val,wifi_state:val,dropmarble_command:val,shutdown_alart_sound:val
-
-    } else {}
+    try {
+      var url =
+          Uri.parse("http://$starter_ip/control?command=getAdvancedSettings");
+      http.Response res = await http.get(url);
+      if (res.statusCode == 200) {
+        var result = res.body.split("=");
+        if (result[0] == "advancedSettings") {
+          var settings = result[1].split(",");
+          var idleColorString = settings[1].split(":")[1].split("-");
+          var dropColorString = settings[2].split(":")[1].split("-");
+          setState(() {
+            autoOffBatt = int.parse(settings[0].split(":")[1]);
+            autoOffUSB = int.parse(settings[1].split(":")[1]);
+            keepAliveInterval = int.parse(settings[2].split(":")[1]);
+            MQTT_pass = settings[3].split(":")[1];
+            MQTT_cmd1 = settings[4].split(":")[1];
+            MQTT_url1 = settings[5].split(":")[1];
+            MQTT_cmd2 = settings[6].split(":")[1];
+            MQTT_url2 = settings[7].split(":")[1];
+            triggerURL = settings[8].split(":")[1];
+            wifiEnabled =
+                int.parse(settings[9].split(":")[1]) == 1 ? true : false;
+            cmdToDropMarble = settings[10].split(":")[1];
+            shutdownSoundEnabled =
+                int.parse(settings[11].split(":")[1]) == 1 ? true : false;
+          });
+        } else {
+          displaySnackBar("Unable to get current Advanced Settings");
+        }
+      } else {
+        displaySnackBar("Unable to get current Advanced Settings");
+      }
+    } on Exception catch (e) {
+      // TODO
+      displaySnackBar("Unable to get current Advanced Settings");
+    }
   }
 
   @override
@@ -196,9 +226,12 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                         ),
                         SizedBox(
                           width: 70,
-                          child: TextField(
+                          child: TextFormField(
                             // maxLength: 3,
                             // controller: cmdTextController,
+                            initialValue: autoOffBatt == null
+                                ? ""
+                                : autoOffBatt.toString(),
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.left,
                             style: boldInfoText,
@@ -243,9 +276,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                         ),
                         SizedBox(
                           width: 70,
-                          child: TextField(
+                          child: TextFormField(
                             // maxLength: 3,
                             // controller: cmdTextController,
+                            initialValue:
+                                autoOffUSB == null ? "" : autoOffUSB.toString(),
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.left,
                             style: boldInfoText,
@@ -290,9 +325,12 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                         ),
                         SizedBox(
                           width: 70,
-                          child: TextField(
+                          child: TextFormField(
                             // maxLength: 3,
                             // controller: cmdTextController,
+                            initialValue: keepAliveInterval == null
+                                ? ""
+                                : keepAliveInterval.toString(),
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.left,
                             style: boldInfoText,
@@ -335,10 +373,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                     ),
                     SizedBox(
                       width: 200,
-                      child: TextField(
+                      child: TextFormField(
                         // maxLength: 3,
                         // controller: cmdTextController,
                         // keyboardType: TextInputType.number,
+                        initialValue: MQTT_pass == null ? "" : MQTT_pass,
                         obscureText: true,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
@@ -372,10 +411,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                     ),
                     SizedBox(
                       width: 75,
-                      child: TextField(
+                      child: TextFormField(
                         // maxLength: 3,
                         // controller: cmdTextController,
                         // keyboardType: TextInputType.number,
+                        initialValue: MQTT_cmd1 == null ? "" : MQTT_cmd1,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
@@ -402,10 +442,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                     ),
                     SizedBox(
                       width: 75,
-                      child: TextField(
+                      child: TextFormField(
                         // maxLength: 3,
                         // controller: cmdTextController,
                         // keyboardType: TextInputType.number,
+                        initialValue: MQTT_url1 == null ? "" : MQTT_url1,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
@@ -441,10 +482,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                     ),
                     SizedBox(
                       width: 75,
-                      child: TextField(
+                      child: TextFormField(
                         // maxLength: 3,
                         // controller: cmdTextController,
                         // keyboardType: TextInputType.number,
+                        initialValue: MQTT_cmd2 == null ? "" : MQTT_cmd2,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
@@ -471,10 +513,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                     ),
                     SizedBox(
                       width: 75,
-                      child: TextField(
+                      child: TextFormField(
                         // maxLength: 3,
                         // controller: cmdTextController,
                         // keyboardType: TextInputType.number,
+                        initialValue: MQTT_url2 == null ? "" : MQTT_url2,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
@@ -510,10 +553,11 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                     ),
                     SizedBox(
                       width: 100,
-                      child: TextField(
+                      child: TextFormField(
                         // maxLength: 3,
                         // controller: cmdTextController,
                         // keyboardType: TextInputType.number,
+                        initialValue: triggerURL == null ? "" : triggerURL,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {
@@ -578,10 +622,12 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                     ),
                     SizedBox(
                       width: 100,
-                      child: TextField(
+                      child: TextFormField(
                         // maxLength: 3,
                         // controller: cmdTextController,
                         // keyboardType: TextInputType.number,
+                        initialValue:
+                            cmdToDropMarble == null ? "" : cmdToDropMarble,
                         textAlign: TextAlign.left,
                         style: boldInfoText,
                         onChanged: (value) {

@@ -10,11 +10,13 @@ import 'package:app_settings/app_settings.dart';
 
 class DeviceIcon extends StatefulWidget {
   // const DeviceIcon({ Key? key }) : super(key: key);
-  DeviceIcon({this.deviceType, this.icon, this.device_ip, this.isAdded});
+  DeviceIcon(
+      {this.deviceType, this.icon, this.device_ip, this.isAdded, this.port});
   final String deviceType;
   final String icon;
   final String device_ip;
   final bool isAdded;
+  final int port;
   @override
   _DeviceIconState createState() => _DeviceIconState();
 }
@@ -51,25 +53,30 @@ class _DeviceIconState extends State<DeviceIcon> {
   startListeningStatus() async {
     try {
       print("Listening for battery and power status");
-      receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
+      receiver = await UDP.bind(Endpoint.any(port: Port(widget.port)));
       await receiver.listen((datagram) {
         var str = String.fromCharCodes(datagram.data);
         var tokens = str.split("=");
-        if (tokens[0].trim() == "deviceStatus") {
+        var deviceStatus = tokens[1].split("&");
+        if (tokens[0].trim() == "deviceStatus" &&
+            deviceStatus[0] == deviceType) {
           setState(() {
             isOnline = true;
             lastStatusOn = DateTime.now();
           });
-          var deviceStatus = tokens[1].split(":");
-          if (deviceStatus[0] == "Battery") {
-            if (deviceStatus[1] == "ON_USB_POW") {
-              setState(() {
-                battery = -1;
-              });
-            } else {
-              setState(() {
-                battery = int.parse(deviceStatus[1]);
-              });
+
+          if (deviceStatus[0] == deviceType) {
+            var power = deviceStatus[1].split(':');
+            if (power[0] == "Battery") {
+              if (power[1] == "ON_USB_POW") {
+                setState(() {
+                  battery = -1;
+                });
+              } else {
+                setState(() {
+                  battery = int.parse(power[1]);
+                });
+              }
             }
           }
         }
@@ -84,7 +91,7 @@ class _DeviceIconState extends State<DeviceIcon> {
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    receiver.close();
+    // receiver.close();
   }
 
   @override

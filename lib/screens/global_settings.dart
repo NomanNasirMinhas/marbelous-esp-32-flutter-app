@@ -134,7 +134,7 @@ class _GlobalSettingsState extends State<GlobalSettings> {
                       "Wifi SSID: ${wifi_ssd == null ? 'Not Set' : '$wifi_ssd'}",
                       style: boldInfoText,
                     ),
-                    TextField(
+                    TextFormField(
                       controller: cmdTextController,
 
                       // keyboardType: TextInputType.number,
@@ -158,7 +158,7 @@ class _GlobalSettingsState extends State<GlobalSettings> {
                       "Wifi Password: ${wifi_password == null ? 'Not Set' : 'Set'}",
                       style: boldInfoText,
                     ),
-                    TextField(
+                    TextFormField(
                       controller: cmdTextController,
                       // keyboardType: TextInputType.number,
                       obscureText: true,
@@ -182,7 +182,7 @@ class _GlobalSettingsState extends State<GlobalSettings> {
                       "Hue Bridge IP: ${hue_bridge_ip == null ? 'Not Set' : '$hue_bridge_ip'}",
                       style: boldInfoText,
                     ),
-                    TextField(
+                    TextFormField(
                       controller: cmdTextController,
                       // keyboardType: TextInputType.number,
                       textAlign: TextAlign.left,

@@ -104,7 +104,7 @@ class _StarterCardState extends State<StarterCard> {
   void dispose() async {
     super.dispose();
     await _stopWatchTimer.dispose();
-    receiver.close();
+    // receiver.close();
   }
 
   dropMarble() async {

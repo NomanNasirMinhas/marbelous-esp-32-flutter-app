@@ -196,7 +196,7 @@ class _CommandScreenState extends State<CommandScreen> {
                         SizedBox(
                           height: 20,
                         ),
-                        TextField(
+                        TextFormField(
                           controller: cmdTextController,
                           // keyboardType: TextInputType.number,
                           textAlign: TextAlign.left,

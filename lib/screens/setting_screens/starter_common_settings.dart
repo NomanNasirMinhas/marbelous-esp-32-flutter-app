@@ -37,7 +37,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
   bool autoOffSoundActive = false;
   int dropMarbleSound = 0;
   double wheelSpeed = 1;
-  String name = "";
+  String name;
 
   BoxDecoration inactiveBox = BoxDecoration(
       border: Border.all(
@@ -75,12 +75,50 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
   }
 
   fetchCurrentSettings() async {
-    var url = Uri.parse("http://$starter_ip/control?command=getCommonSettings");
-    http.Response res = await http.get(url);
-    if (res.statusCode == 200) {
-      //commonSettings=breating_active:val,arrow_color_idle:R-G-B,arrow_color_dropmarble:R-G-B,dropmarble_sound:val,auto_off_sound:val,wheel_speed:val,device_name:val
+    try {
+      var url =
+          Uri.parse("http://$starter_ip/control?command=getCommonSettings");
+      http.Response res = await http.get(url);
+      if (res.statusCode == 200) {
+        //commonSettings=device_name:val
+        var result = res.body.split("=");
+        if (result[0] == "commonSettings") {
+          var settings = result[1].split(",");
+          var idleColorString = settings[1].split(":")[1].split("-");
+          var dropColorString = settings[2].split(":")[1].split("-");
+          setState(() {
+            beatingLEDactive =
+                int.parse(settings[0].split(":")[1]) == 1 ? true : false;
 
-    } else {}
+            idleColor = new RGBColor(
+                red: int.parse(idleColorString[0]),
+                green: int.parse(idleColorString[1]),
+                blue: int.parse(idleColorString[2]));
+
+            dropColor = new RGBColor(
+                red: int.parse(dropColorString[0]),
+                green: int.parse(dropColorString[1]),
+                blue: int.parse(dropColorString[2]));
+
+            dropMarbleSound = int.parse(settings[3].split(":")[1]);
+
+            autoOffSoundActive =
+                int.parse(settings[4].split(":")[1]) == 1 ? true : false;
+
+            wheelSpeed = double.parse(settings[5].split(":")[1]);
+
+            name = settings[6].split(":")[1];
+          });
+        } else {
+          displaySnackBar("Unable to get current Common Settings");
+        }
+      } else {
+        displaySnackBar("Unable to get current Common Settings");
+      }
+    } on Exception catch (e) {
+      // TODO
+      displaySnackBar("Unable to get current Common Settings");
+    }
   }
 
   displaySnackBar(String message) {
@@ -163,6 +201,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
   @override
   void initState() {
     super.initState();
+    fetchCurrentSettings();
   }
 
   @override
@@ -790,7 +829,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                     BoldInfoText(
                       text: "Name: ${name == null ? 'Not Set' : '$name'}",
                     ),
-                    TextField(
+                    TextFormField(
                       controller: cmdTextController,
                       // keyboardType: TextInputType.number,
                       textAlign: TextAlign.left,

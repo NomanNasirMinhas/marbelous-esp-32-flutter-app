@@ -7,6 +7,7 @@ import 'package:marbelous_esp32_app/screens/setting_screens/starter_advanced_set
 import 'dart:io';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:loading_overlay/loading_overlay.dart';
+import 'package:udp/udp.dart';
 import './../constants.dart';
 import './command_screen.dart';
 import 'setting_screens/starter_common_settings.dart';
@@ -39,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   dynamic starter_common_settings;
   dynamic starter_advanced_settings;
 
+  Future<UDP> receiver = UDP.bind(Endpoint.any(port: Port(65000)));
   scanNetwork() async {
     final db = Localstore.instance;
     print("Getting Starter Settings");
@@ -122,8 +124,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     // TODO: implement initState
-    super.initState();
     scanNetwork();
+    super.initState();
+  }
+
+  @override
+  dispose() {
+    super.dispose();
   }
 
   Widget getCurrentWidget() {
@@ -338,6 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //Starter ICON
                               GestureDetector(
                                 child: DeviceIcon(
+                                  port: 65001,
                                   deviceType: 'starter',
                                   icon: 'starter.png',
                                   device_ip: devicesMap.containsKey("starter")
@@ -352,6 +360,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //Icon 2
                               GestureDetector(
                                 child: DeviceIcon(
+                                  port: 65002,
                                   deviceType: 'finisher',
                                   icon: 'finisher.png',
                                   device_ip: devicesMap.containsKey("finisher")
@@ -366,6 +375,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //Icon 3
                               GestureDetector(
                                 child: DeviceIcon(
+                                  port: 65003,
                                   deviceType: 'wheel',
                                   icon: 'wheel.png',
                                   device_ip: devicesMap.containsKey("wheel")
@@ -380,6 +390,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //Icon 4
                               GestureDetector(
                                 child: DeviceIcon(
+                                  port: 65004,
                                   deviceType: 'spiral',
                                   icon: 'spiral.png',
                                   device_ip: devicesMap.containsKey("spiral")
@@ -401,6 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //Starter ICON
                               GestureDetector(
                                 child: DeviceIcon(
+                                  port: 65005,
                                   deviceType: 'teleport1',
                                   icon: 'teleporter1.png',
                                   device_ip: devicesMap.containsKey("teleport1")
@@ -415,6 +427,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //Icon 2
                               GestureDetector(
                                 child: DeviceIcon(
+                                  port: 65006,
                                   deviceType: 'teleport2',
                                   icon: 'teleporter2.png',
                                   device_ip: devicesMap.containsKey("teleport2")
@@ -429,6 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               //Icon 3
                               GestureDetector(
                                 child: DeviceIcon(
+                                  port: 65007,
                                   deviceType: 'switch',
                                   icon: 'switch.png',
                                   device_ip: devicesMap.containsKey("switch")

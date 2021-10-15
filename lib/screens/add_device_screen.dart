@@ -174,7 +174,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         'ip': deviceIP,
         'type': deviceType
       });
-      receiver.close();
+      // receiver.close();
       displaySnackBar("Device Added Successfully");
       Navigator.popAndPushNamed(context, HomeScreen.id);
     } on Exception catch (e) {
@@ -185,7 +185,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
   cancel() {
     displaySnackBar("Device Not Added");
-    receiver.close();
+    // receiver.close();
     Navigator.popAndPushNamed(context, HomeScreen.id);
   }
 
@@ -245,8 +245,10 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                               SizedBox(
                                 height: 5,
                               ),
-                              TextField(
-                                controller: cmdTextController,
+                              TextFormField(
+                                initialValue:
+                                    deviceName == null ? "" : deviceName,
+                                // controller: cmdTextController,
                                 // keyboardType: TextInputType.number,
                                 textAlign: TextAlign.left,
                                 style: TextStyle(
@@ -371,8 +373,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                                       children: [
                                         ElevatedButton(
                                           onPressed: () async {
-                                            var res =
-                                                await getCurrentGlobalSettings();
+                                            var res = true;
+                                            // await getCurrentGlobalSettings();
                                             if (res == true) {
                                               startUDPServer();
                                             } else {
