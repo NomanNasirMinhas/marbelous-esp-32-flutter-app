@@ -6,6 +6,8 @@ import '../../constants.dart';
 import 'package:localstore/localstore.dart';
 import 'dart:io';
 import 'package:localstorage/localstorage.dart';
+import 'package:flutter/services.dart';
+import 'package:wifi_iot/wifi_iot.dart';
 
 class GlobalSettings extends StatefulWidget {
   // GlobalSettings({Key? key}) : super(key: key);
@@ -55,6 +57,22 @@ class _GlobalSettingsState extends State<GlobalSettings> {
     Navigator.pop(context);
   }
 
+  Future<List<WifiNetwork>> loadWifiList() async {
+    List<WifiNetwork> htResultNetwork;
+    try {
+      htResultNetwork = await WiFiForIoTPlugin.loadWifiList();
+      print("Wifi number ${htResultNetwork.length}");
+      htResultNetwork.forEach((element) {
+        print("Wifi");
+        print(element.ssid);
+      });
+    } on PlatformException {
+      htResultNetwork = <WifiNetwork>[];
+    }
+
+    return htResultNetwork;
+  }
+
   cancel() {
     displaySnackBar("Settings Not Saved.");
     Navigator.pop(context);
@@ -78,6 +96,7 @@ class _GlobalSettingsState extends State<GlobalSettings> {
   void initState() {
     super.initState();
     getCurrentGlobalSettings();
+    loadWifiList();
   }
 
   @override

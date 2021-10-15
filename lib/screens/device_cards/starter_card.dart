@@ -1,11 +1,16 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:marbelous_esp32_app/screens/home_screen.dart';
+import 'package:marbelous_esp32_app/utilities/device_class.dart';
 import './../../components/round_button.dart';
 import './../../constants.dart';
 import './../../components/device_card.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
+import 'package:http/http.dart' as http;
+import 'package:udp/udp.dart';
 
 class StarterCard extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
@@ -16,7 +21,8 @@ class StarterCard extends StatefulWidget {
       this.type,
       this.ip,
       this.hasFinisher,
-      this.hasSwitch});
+      this.hasSwitch,
+      this.devices});
   final String title;
   final String icon;
   final String type;
@@ -24,13 +30,17 @@ class StarterCard extends StatefulWidget {
   final bool hasSwitch;
   final bool hasFinisher;
 
+  final HashMap<String, MarbleDevice> devices;
+
   @override
   _StarterCardState createState() => _StarterCardState();
 }
 
 class _StarterCardState extends State<StarterCard> {
   final _isHours = true;
-
+  var receiver;
+  String finisher_ip;
+  HashMap<String, MarbleDevice> devices;
   final StopWatchTimer _stopWatchTimer = StopWatchTimer(
     mode: StopWatchMode.countUp,
     // onChange: (value) => print('onChange $value'),
@@ -53,6 +63,10 @@ class _StarterCardState extends State<StarterCard> {
     setState(() {
       hasSwitch = widget.hasSwitch;
       hasFinisher = widget.hasFinisher;
+      devices = widget.devices;
+      if (devices.containsKey('finisher')) {
+        finisher_ip = devices['finisher'].ipAddrr;
+      }
     });
     // _stopWatchTimer.rawTime.listen((value) =>
     //     print('rawTime $value ${StopWatchTimer.getDisplayTime(value)}'));
@@ -61,10 +75,36 @@ class _StarterCardState extends State<StarterCard> {
     // _stopWatchTimer.records.listen((value) => print('records $value'));
   }
 
+  startUDPServer() async {
+    try {
+      // print("Starting search for $deviceToAdd");
+      receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
+
+      await receiver.listen((datagram) {
+        var str = String.fromCharCodes(datagram.data);
+        var tokens = str.split("=");
+        if (tokens[0].trim() == "device_msg") {
+          var command = tokens[1].split(":");
+          if (command[0] == "finisher_finish") {
+            _stopWatchTimer.onExecute.add(StopWatchExecute.stop);
+            setState(() {
+              dropping = false;
+            });
+            displaySnackBar("Finisher Sent finished command");
+          }
+        }
+      });
+    } on Exception catch (e) {
+      // TODO
+      print(e.toString());
+    }
+  }
+
   @override
   void dispose() async {
     super.dispose();
     await _stopWatchTimer.dispose();
+    receiver.close();
   }
 
   dropMarble() async {
@@ -102,12 +142,24 @@ class _StarterCardState extends State<StarterCard> {
     return Column(
       children: [
         BoldInfoText(text: "Lane Switch"),
+        SizedBox(
+          height: 20,
+        ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             RoundedButton(
               title: "<<",
-              onClick: () async {},
+              onClick: () async {
+                try {
+                  var url = Uri.parse(
+                      "http://$finisher_ip/control?command=laneswitch_left");
+                  http.Response res =
+                      await http.get(url).timeout(Duration(seconds: 3));
+                } on Exception catch (e) {
+                  // TODO
+                }
+              },
               color: Colors.blue[800],
             ),
             SizedBox(
@@ -115,7 +167,16 @@ class _StarterCardState extends State<StarterCard> {
             ),
             RoundedButton(
               title: "Toggle",
-              onClick: () async {},
+              onClick: () async {
+                try {
+                  var url = Uri.parse(
+                      "http://$finisher_ip/control?command=laneswitch_toggle");
+                  http.Response res =
+                      await http.get(url).timeout(Duration(seconds: 3));
+                } on Exception catch (e) {
+                  // TODO
+                }
+              },
               color: Colors.blue[900],
             ),
             SizedBox(
@@ -123,7 +184,16 @@ class _StarterCardState extends State<StarterCard> {
             ),
             RoundedButton(
               title: ">>",
-              onClick: () async {},
+              onClick: () async {
+                try {
+                  var url = Uri.parse(
+                      "http://$finisher_ip/control?command=laneswitch_right");
+                  http.Response res =
+                      await http.get(url).timeout(Duration(seconds: 3));
+                } on Exception catch (e) {
+                  // TODO
+                }
+              },
               color: Colors.blue[800],
             ),
           ],

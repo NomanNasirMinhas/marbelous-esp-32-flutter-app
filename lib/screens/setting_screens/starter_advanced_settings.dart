@@ -11,6 +11,7 @@ import 'package:localstorage/localstorage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:loading_overlay/loading_overlay.dart';
 
 class StarterAdvancedSettings extends StatefulWidget {
   // StarterAdvancedSettings({Key? key}) : super(key: key);
@@ -53,6 +54,16 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
   @override
   void initState() {
     super.initState();
+  }
+
+  fetchCurrentSettings() async {
+    var url =
+        Uri.parse("http://$starter_ip/control?command=getAdvancedSettings");
+    http.Response res = await http.get(url);
+    if (res.statusCode == 200) {
+      //advancedSettings=auto_off_battery:val,auto_off_usb:val,keep_alive:val,MQTT_password:val,MQTT_command1:val,MQTT_command1_url:val,MQTT_command2:val,MQTT_command2_url:val,trigger_url:val,wifi_state:val,dropmarble_command:val,shutdown_alart_sound:val
+
+    } else {}
   }
 
   @override

@@ -11,6 +11,7 @@ import 'package:localstorage/localstorage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:loading_overlay/loading_overlay.dart';
 
 class StarterCommonSettings extends StatefulWidget {
   // StarterCommonSettings({Key? key}) : super(key: key);
@@ -71,6 +72,15 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
     colors.add(blue);
     colors.add(voilet);
     colors.add(white);
+  }
+
+  fetchCurrentSettings() async {
+    var url = Uri.parse("http://$starter_ip/control?command=getCommonSettings");
+    http.Response res = await http.get(url);
+    if (res.statusCode == 200) {
+      //commonSettings=breating_active:val,arrow_color_idle:R-G-B,arrow_color_dropmarble:R-G-B,dropmarble_sound:val,auto_off_sound:val,wheel_speed:val,device_name:val
+
+    } else {}
   }
 
   displaySnackBar(String message) {

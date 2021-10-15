@@ -29,6 +29,8 @@ class _DeviceIconState extends State<DeviceIcon> {
   DateTime lastStatusOn = DateTime.now();
   Duration diff;
   bool keepChecking = true;
+  var receiver;
+
   startCheckingStatus() async {
     try {
       while (keepChecking && mounted) {
@@ -49,7 +51,7 @@ class _DeviceIconState extends State<DeviceIcon> {
   startListeningStatus() async {
     try {
       print("Listening for battery and power status");
-      var receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
+      receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
       await receiver.listen((datagram) {
         var str = String.fromCharCodes(datagram.data);
         var tokens = str.split("=");
@@ -76,6 +78,13 @@ class _DeviceIconState extends State<DeviceIcon> {
       // TODO
       print(e.toString());
     }
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    receiver.close();
   }
 
   @override
@@ -106,7 +115,7 @@ class _DeviceIconState extends State<DeviceIcon> {
       switch (deviceType) {
         case 'starter':
           if (device_ip == null) {
-            displaySnackBar("Device IP Not Present");
+            displaySnackBar("Device Not Added Yet");
           } else {
             Navigator.pushNamed(context, StarterCommonSettings.id,
                 arguments: {'starter_ip': device_ip});

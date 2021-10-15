@@ -48,6 +48,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
   getCurrentGlobalSettings() async {
     try {
+      setState(() {
+        isLoading = true;
+      });
       final db = Localstore.instance;
       var settings =
           await db.collection('global_settings').doc("global_settings").get();
@@ -74,22 +77,41 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                 await http.get(restart_url).timeout(Duration(seconds: 3));
             if (res.statusCode == 200) {
               displaySnackBar("Global Setings Sent to Device");
+              setState(() {
+                isLoading = false;
+              });
+              return true;
             } else {
               displaySnackBar("Error in sending Restart Command");
+              setState(() {
+                isLoading = false;
+              });
+              return -3;
             }
           } else {
             displaySnackBar("Error in sending Wifi Password");
+            setState(() {
+              isLoading = false;
+            });
+            return -2;
           }
         } else {
           displaySnackBar("Error in sending Wifi SSID");
+          setState(() {
+            isLoading = false;
+          });
+          return -1;
         }
-        return true;
       } else {
+        setState(() {
+          isLoading = false;
+        });
         displaySnackBar("No Global Settings Found");
         return false;
       }
     } on Exception catch (e) {
       print(e.toString());
+      return 0;
     }
   }
 
@@ -357,10 +379,12 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                                               CoolAlert.show(
                                                 context: context,
                                                 type: CoolAlertType.error,
-                                                title:
-                                                    "Global Settings Not Found",
-                                                text:
-                                                    "Please configure your Global Settings before adding a device.",
+                                                title: res == false
+                                                    ? "Global Settings Not Found"
+                                                    : "Error in sending Home Wifi info to device",
+                                                text: res == false
+                                                    ? "Please configure your Global Settings before adding a device."
+                                                    : "Please try again..",
                                                 confirmBtnText: "Go To Home",
                                                 onConfirmBtnTap: () {
                                                   Navigator.pop(context);

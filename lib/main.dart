@@ -18,8 +18,8 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    MessageRecvr recvr = MessageRecvr();
-    recvr.startListeningForMessages();
+    // MessageRecvr recvr = MessageRecvr();
+    // recvr.startListeningForMessages();
     return MaterialApp(
       title: 'Marblelous MVP',
       theme: ThemeData(

@@ -287,13 +287,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.pushNamed(context, GlobalSettings.id);
                   },
                 ),
-                IconButton(
-                  icon: Icon(Icons.notifications_active),
-                  color: Colors.white,
-                  onPressed: () {
-                    // scanNetwork();
-                  },
-                ),
+                // IconButton(
+                //   icon: Icon(Icons.notifications_active),
+                //   color: Colors.white,
+                //   onPressed: () {
+                //     // scanNetwork();
+                //   },
+                // ),
               ],
               title: Text(
                 "Marblelous Home",
@@ -319,8 +319,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: "assets/img/starter.png",
                       type: "starter",
                       ip: starterIP,
-                      hasFinisher: !devicesMap.containsKey('finisher'),
-                      hasSwitch: !devicesMap.containsKey('switch'),
+                      hasFinisher: devicesMap.containsKey('finisher'),
+                      hasSwitch: devicesMap.containsKey('switch'),
+                      devices: devicesMap,
                     ),
                     Container(
                       decoration: sectionCard,
