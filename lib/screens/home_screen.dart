@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   dynamic starter_common_settings;
   dynamic starter_advanced_settings;
 
-  Future<UDP> receiver = UDP.bind(Endpoint.any(port: Port(65000)));
+  // Future<UDP> receiver = UDP.bind(Endpoint.any(port: Port(65000)));
   scanNetwork() async {
     final db = Localstore.instance;
     print("Getting Starter Settings");

@@ -28,7 +28,7 @@ class StarterCard extends StatefulWidget {
 class _StarterCardState extends State<StarterCard> {
   final _isHours = true;
   var receiver;
-  String finisher_ip;
+  String switch_ip;
   String starter_ip;
 
   final StopWatchTimer _stopWatchTimer = StopWatchTimer(
@@ -57,16 +57,22 @@ class _StarterCardState extends State<StarterCard> {
     } else {
       print("${items.length} Devices Found");
       items.forEach((key, value) {
+        if (value['type'] == "starter") {
+          setState(() {
+            starter_ip = value['ip'];
+          });
+        }
+
         if (value['type'] == "finisher") {
           setState(() {
             hasFinisher = true;
-            finisher_ip = value['ip'];
           });
         }
 
         if (value['type'] == "switch") {
           setState(() {
             hasSwitch = true;
+            switch_ip = value['ip'];
           });
         }
       });
@@ -79,6 +85,7 @@ class _StarterCardState extends State<StarterCard> {
   initState() {
     super.initState();
     scanNetwork();
+    startUDPServer();
     // _stopWatchTimer.rawTime.listen((value) =>
     //     print('rawTime $value ${StopWatchTimer.getDisplayTime(value)}'));
     // _stopWatchTimer.minuteTime.listen((value) => print('minuteTime $value'));
@@ -163,11 +170,11 @@ class _StarterCardState extends State<StarterCard> {
               onClick: () async {
                 try {
                   var url = Uri.parse(
-                      "http://$finisher_ip/control?command=laneswitch_left");
+                      "http://$switch_ip/control?command=laneswitch_left");
                   http.Response res =
                       await http.get(url).timeout(Duration(seconds: 3));
                 } on Exception catch (e) {
-                  // TODO
+                  displaySnackBar("Finisher Command Exception");
                 }
               },
               color: Colors.blue[800],
@@ -180,11 +187,11 @@ class _StarterCardState extends State<StarterCard> {
               onClick: () async {
                 try {
                   var url = Uri.parse(
-                      "http://$finisher_ip/control?command=laneswitch_toggle");
+                      "http://$switch_ip/control?command=laneswitch_toggle");
                   http.Response res =
                       await http.get(url).timeout(Duration(seconds: 3));
                 } on Exception catch (e) {
-                  // TODO
+                  displaySnackBar("Finisher Command Exception");
                 }
               },
               color: Colors.blue[900],
@@ -197,11 +204,11 @@ class _StarterCardState extends State<StarterCard> {
               onClick: () async {
                 try {
                   var url = Uri.parse(
-                      "http://$finisher_ip/control?command=laneswitch_right");
+                      "http://$switch_ip/control?command=laneswitch_right");
                   http.Response res =
                       await http.get(url).timeout(Duration(seconds: 3));
                 } on Exception catch (e) {
-                  // TODO
+                  displaySnackBar("Finisher Command Exception");
                 }
               },
               color: Colors.blue[800],
