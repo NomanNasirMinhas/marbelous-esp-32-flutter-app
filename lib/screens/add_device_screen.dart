@@ -28,7 +28,7 @@ class AddDeviceScreen extends StatefulWidget {
 
 class _AddDeviceScreenState extends State<AddDeviceScreen> {
   bool isLoading = false;
-
+  bool sentSettings = false;
   bool serverStarted = false;
   final info = NetworkInfo();
   var wifiIP;
@@ -355,60 +355,105 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                                       child: Text("Cancel"),
                                     )
                                   ]
-                                : [
-                                    SizedBox(
-                                      height: 200,
-                                    ),
-                                    Text(
-                                      "Press Button Below to Start Adding the Device",
-                                      textAlign: TextAlign.center,
-                                      style: headingText,
-                                    ),
-                                    SizedBox(
-                                      height: 30,
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        ElevatedButton(
-                                          onPressed: () async {
-                                            var res =
-                                                await getCurrentGlobalSettings();
-                                            if (res == true) {
-                                              startUDPServer();
-                                            } else {
-                                              CoolAlert.show(
-                                                context: context,
-                                                type: CoolAlertType.error,
-                                                title: res == false
-                                                    ? "Global Settings Not Found"
-                                                    : "Error in sending Home Wifi info to device",
-                                                text: res == false
-                                                    ? "Please configure your Global Settings before adding a device."
-                                                    : "Please try again..",
-                                                confirmBtnText: "Go To Home",
-                                                onConfirmBtnTap: () {
-                                                  Navigator.pop(context);
-                                                  Navigator.popAndPushNamed(
-                                                      context, HomeScreen.id);
-                                                },
-                                              );
-                                            }
-                                            // openSettings();
-                                          },
-                                          child: Text("Add Device"),
+                                : sentSettings
+                                    ? [
+                                        SizedBox(
+                                          height: 200,
                                         ),
-                                        ElevatedButton(
-                                          onPressed: () {
-                                            Navigator.popAndPushNamed(
-                                                context, HomeScreen.id);
-                                          },
-                                          child: Text("Cancel"),
+                                        Text(
+                                          "If connected to home Wifi, Press Button Below to Start Adding the Device",
+                                          textAlign: TextAlign.center,
+                                          style: headingText,
                                         ),
+                                        SizedBox(
+                                          height: 30,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                startUDPServer();
+                                              },
+                                              child: Text("Add Device"),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.popAndPushNamed(
+                                                    context, HomeScreen.id);
+                                              },
+                                              child: Text("Cancel"),
+                                            ),
+                                          ],
+                                        )
+                                      ]
+                                    : [
+                                        SizedBox(
+                                          height: 150,
+                                        ),
+                                        Text(
+                                          "If connected to Device Access Point, Press Button Below to send Wifi Credentials to Device",
+                                          textAlign: TextAlign.center,
+                                          style: headingText,
+                                        ),
+                                        SizedBox(
+                                          height: 30,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceEvenly,
+                                          children: [
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                setState(() {
+                                                  isLoading = true;
+                                                });
+                                                var res =
+                                                    await getCurrentGlobalSettings();
+                                                setState(() {
+                                                  isLoading = false;
+                                                });
+                                                if (res == true) {
+                                                  setState(() {
+                                                    sentSettings = true;
+                                                  });
+                                                  AppSettings
+                                                      .openWIFISettings();
+                                                } else {
+                                                  CoolAlert.show(
+                                                    context: context,
+                                                    type: CoolAlertType.error,
+                                                    title: res == false
+                                                        ? "Global Settings Not Found"
+                                                        : "Error in sending Home Wifi info to device",
+                                                    text: res == false
+                                                        ? "Please configure your Global Settings before adding a device."
+                                                        : "Please try again..",
+                                                    confirmBtnText:
+                                                        "Go To Home",
+                                                    onConfirmBtnTap: () {
+                                                      Navigator.pop(context);
+                                                      Navigator.popAndPushNamed(
+                                                          context,
+                                                          HomeScreen.id);
+                                                    },
+                                                  );
+                                                }
+                                                // openSettings();
+                                              },
+                                              child: Text("Send Credentials"),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                Navigator.popAndPushNamed(
+                                                    context, HomeScreen.id);
+                                              },
+                                              child: Text("Cancel"),
+                                            ),
+                                          ],
+                                        )
                                       ],
-                                    )
-                                  ],
                           ),
                         ),
                 ],
