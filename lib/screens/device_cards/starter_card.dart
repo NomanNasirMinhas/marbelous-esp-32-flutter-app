@@ -11,26 +11,15 @@ import 'dart:async';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
 import 'package:http/http.dart' as http;
 import 'package:udp/udp.dart';
+import 'package:localstore/localstore.dart';
 
 class StarterCard extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
   // static String id = "home_screen";
-  StarterCard(
-      {this.title,
-      this.icon,
-      this.type,
-      this.ip,
-      this.hasFinisher,
-      this.hasSwitch,
-      this.devices});
+  StarterCard({this.title, this.icon, this.type});
   final String title;
   final String icon;
   final String type;
-  final String ip;
-  final bool hasSwitch;
-  final bool hasFinisher;
-
-  final HashMap<String, MarbleDevice> devices;
 
   @override
   _StarterCardState createState() => _StarterCardState();
@@ -40,7 +29,8 @@ class _StarterCardState extends State<StarterCard> {
   final _isHours = true;
   var receiver;
   String finisher_ip;
-  HashMap<String, MarbleDevice> devices;
+  String starter_ip;
+
   final StopWatchTimer _stopWatchTimer = StopWatchTimer(
     mode: StopWatchMode.countUp,
     // onChange: (value) => print('onChange $value'),
@@ -52,22 +42,43 @@ class _StarterCardState extends State<StarterCard> {
   int dropMarbles = 1;
   int dropMarbleInterval = 1;
 
-  bool hasSwitch;
-  bool hasFinisher;
+  bool hasSwitch = false;
+  bool hasFinisher = false;
 
   bool dropping;
+
+  scanNetwork() async {
+    final db = Localstore.instance;
+    print("Scanning Network");
+
+    final items = await db.collection('marbelous_devices').get();
+    if (items == null) {
+      print("No Devices Found");
+    } else {
+      print("${items.length} Devices Found");
+      items.forEach((key, value) {
+        if (value['type'] == "finisher") {
+          setState(() {
+            hasFinisher = true;
+            finisher_ip = value['ip'];
+          });
+        }
+
+        if (value['type'] == "switch") {
+          setState(() {
+            hasSwitch = true;
+          });
+        }
+      });
+    }
+
+    print('Done');
+  }
 
   @override
   initState() {
     super.initState();
-    setState(() {
-      hasSwitch = widget.hasSwitch;
-      hasFinisher = widget.hasFinisher;
-      devices = widget.devices;
-      if (devices.containsKey('finisher')) {
-        finisher_ip = devices['finisher'].ipAddrr;
-      }
-    });
+    scanNetwork();
     // _stopWatchTimer.rawTime.listen((value) =>
     //     print('rawTime $value ${StopWatchTimer.getDisplayTime(value)}'));
     // _stopWatchTimer.minuteTime.listen((value) => print('minuteTime $value'));
@@ -108,10 +119,9 @@ class _StarterCardState extends State<StarterCard> {
   }
 
   dropMarble() async {
-    print(widget.ip);
     try {
       var url = Uri.parse(
-          "http://${widget.ip}/control?command=drop_marble_${dropMarbles}x${dropMarbleInterval}_");
+          "http://${starter_ip}/control?command=drop_marble_${dropMarbles}x${dropMarbleInterval}_");
       http.Response res = await http.get(url).timeout(Duration(seconds: 3));
       if (res.statusCode == 200 && res.body == "OK") {
         displaySnackBar("Command Sent Successfully");
@@ -357,7 +367,7 @@ class _StarterCardState extends State<StarterCard> {
         SizedBox(
           height: 20,
         ),
-        hasSwitch
+        hasSwitch == true
             ? Column(
                 children: [
                   DeviceCard(
@@ -371,7 +381,7 @@ class _StarterCardState extends State<StarterCard> {
                 ],
               )
             : Container(),
-        hasFinisher
+        hasFinisher == true
             ? DeviceCard(
                 title: "Finisher",
                 icon: 'assets/img/finisher.png',

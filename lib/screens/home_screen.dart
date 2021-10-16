@@ -74,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ipAddrr: value['ip'],
             type: value['type'],
             docID: key);
+        print("Adding device type ${device.type}");
         devicesMap[device.type] = device;
         // var idx = devices.indexOf(device);
 
@@ -158,7 +159,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 "Starter (${starter_common_settings == null ? "Name Not Set" : starter_common_settings['name']})",
             icon: "assets/img/starter.png",
             type: "starter",
-            ip: starterIP,
           );
         } else {
           return GestureDetector(
@@ -325,10 +325,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           "Starter (${starter_common_settings == null ? "Name Not Set" : starter_common_settings['name']})",
                       icon: "assets/img/starter.png",
                       type: "starter",
-                      ip: starterIP,
-                      hasFinisher: devicesMap.containsKey('finisher'),
-                      hasSwitch: devicesMap.containsKey('switch'),
-                      devices: devicesMap,
                     ),
                     Container(
                       decoration: sectionCard,
@@ -348,12 +344,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   port: 65001,
                                   deviceType: 'starter',
                                   icon: 'starter.png',
-                                  device_ip: devicesMap.containsKey("starter")
-                                      ? devicesMap["starter"].ipAddrr
-                                      : null,
-                                  isAdded: devicesMap.containsKey("starter")
-                                      ? true
-                                      : false,
                                 ),
                               ),
 
@@ -363,12 +353,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   port: 65002,
                                   deviceType: 'finisher',
                                   icon: 'finisher.png',
-                                  device_ip: devicesMap.containsKey("finisher")
-                                      ? devicesMap["finisher"].ipAddrr
-                                      : null,
-                                  isAdded: devicesMap.containsKey("finisher")
-                                      ? true
-                                      : false,
                                 ),
                               ),
 
@@ -378,12 +362,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   port: 65003,
                                   deviceType: 'wheel',
                                   icon: 'wheel.png',
-                                  device_ip: devicesMap.containsKey("wheel")
-                                      ? devicesMap["wheel"].ipAddrr
-                                      : null,
-                                  isAdded: devicesMap.containsKey("wheel")
-                                      ? true
-                                      : false,
                                 ),
                               ),
 
@@ -393,12 +371,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   port: 65004,
                                   deviceType: 'spiral',
                                   icon: 'spiral.png',
-                                  device_ip: devicesMap.containsKey("spiral")
-                                      ? devicesMap["spiral"].ipAddrr
-                                      : null,
-                                  isAdded: devicesMap.containsKey("spiral")
-                                      ? true
-                                      : false,
                                 ),
                               ),
                             ],
@@ -415,12 +387,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   port: 65005,
                                   deviceType: 'teleport1',
                                   icon: 'teleporter1.png',
-                                  device_ip: devicesMap.containsKey("teleport1")
-                                      ? devicesMap["teleport1"].ipAddrr
-                                      : null,
-                                  isAdded: devicesMap.containsKey("teleport1")
-                                      ? true
-                                      : false,
                                 ),
                               ),
 
@@ -430,12 +396,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   port: 65006,
                                   deviceType: 'teleport2',
                                   icon: 'teleporter2.png',
-                                  device_ip: devicesMap.containsKey("teleport2")
-                                      ? devicesMap["teleport2"].ipAddrr
-                                      : null,
-                                  isAdded: devicesMap.containsKey("teleport2")
-                                      ? true
-                                      : false,
                                 ),
                               ),
 
@@ -445,12 +405,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                   port: 65007,
                                   deviceType: 'switch',
                                   icon: 'switch.png',
-                                  device_ip: devicesMap.containsKey("switch")
-                                      ? devicesMap["switch"].ipAddrr
-                                      : null,
-                                  isAdded: devicesMap.containsKey("switch")
-                                      ? true
-                                      : false,
                                 ),
                               ),
                             ],

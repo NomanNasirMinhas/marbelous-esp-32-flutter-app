@@ -96,7 +96,7 @@ class _GlobalSettingsState extends State<GlobalSettings> {
   void initState() {
     super.initState();
     getCurrentGlobalSettings();
-    loadWifiList();
+    // loadWifiList();
   }
 
   @override

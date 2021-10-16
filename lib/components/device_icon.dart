@@ -10,12 +10,10 @@ import 'package:app_settings/app_settings.dart';
 
 class DeviceIcon extends StatefulWidget {
   // const DeviceIcon({ Key? key }) : super(key: key);
-  DeviceIcon(
-      {this.deviceType, this.icon, this.device_ip, this.isAdded, this.port});
+  DeviceIcon({this.deviceType, this.icon, this.port});
   final String deviceType;
   final String icon;
-  final String device_ip;
-  final bool isAdded;
+
   final int port;
   @override
   _DeviceIconState createState() => _DeviceIconState();
@@ -25,13 +23,67 @@ class _DeviceIconState extends State<DeviceIcon> {
   String deviceType;
   String icon;
   String device_ip;
-  bool isAdded;
+  String starterName;
+  String deviceName;
+  bool isAdded = false;
   bool isOnline = false;
   int battery = -1;
   DateTime lastStatusOn = DateTime.now();
   Duration diff;
   bool keepChecking = true;
   var receiver;
+
+  scanNetwork() async {
+    final db = Localstore.instance;
+    print("Getting Starter Settings");
+
+    var common = await db
+        .collection('starter_common_settings')
+        .doc("starter_common_settings")
+        .get();
+    if (common != null && deviceType == "starter") {
+      setState(() {
+        starterName = common["name"];
+      });
+    }
+    print("Scanning Network");
+
+    final items = await db.collection('marbelous_devices').get();
+    if (items == null) {
+      print("No Devices Found");
+    } else {
+      print("${items.length} Devices Found");
+      items.forEach((key, value) {
+        if (value['type'] == deviceType) {
+          setState(() {
+            isAdded = true;
+            device_ip = value['ip'];
+            deviceName = value['name'];
+          });
+        }
+        // MarbleDevice device = new MarbleDevice(
+        //     macAddrr: value['macAddrr'],
+        //     name: value['name'],
+        //     ipAddrr: value['ip'],
+        //     type: value['type'],
+        //     docID: key);
+        // print("Adding device type ${device.type}");
+        // devicesMap[device.type] = device;
+        // // var idx = devices.indexOf(device);
+
+        // setState(() {
+        //   if (device.type == "starter") {
+        //     starterFound = true;
+        //     currentWidget = "starter";
+        //     starterIP = device.ipAddrr;
+        //   }
+        //   devices.add(device);
+        // });
+      });
+    }
+
+    print('Done');
+  }
 
   startCheckingStatus() async {
     try {
@@ -98,11 +150,10 @@ class _DeviceIconState extends State<DeviceIcon> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    scanNetwork();
     setState(() {
       deviceType = widget.deviceType;
       icon = widget.icon;
-      device_ip = widget.device_ip;
-      isAdded = widget.isAdded;
     });
     startListeningStatus();
     startCheckingStatus();

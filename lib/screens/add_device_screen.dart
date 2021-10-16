@@ -46,11 +46,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
   String wifi_password;
   String hue_bridge_ip;
 
-  getCurrentGlobalSettings() async {
+  dynamic getCurrentGlobalSettings() async {
     try {
-      setState(() {
-        isLoading = true;
-      });
       final db = Localstore.instance;
       var settings =
           await db.collection('global_settings').doc("global_settings").get();
@@ -66,52 +63,17 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
             "http://192.168.4.1/control?command=wifi_password&value=$wifi_password");
         var restart_url =
             Uri.parse("http://192.168.4.1/control?command=restart");
-
-        http.Response res =
-            await http.get(ssid_url).timeout(Duration(seconds: 3));
-        if (res.statusCode == 200) {
-          http.Response res =
-              await http.get(password_url).timeout(Duration(seconds: 3));
-          if (res.statusCode == 200) {
-            http.Response res =
-                await http.get(restart_url).timeout(Duration(seconds: 3));
-            if (res.statusCode == 200) {
-              displaySnackBar("Global Setings Sent to Device");
-              setState(() {
-                isLoading = false;
-              });
-              return true;
-            } else {
-              displaySnackBar("Error in sending Restart Command");
-              setState(() {
-                isLoading = false;
-              });
-              return -3;
-            }
-          } else {
-            displaySnackBar("Error in sending Wifi Password");
-            setState(() {
-              isLoading = false;
-            });
-            return -2;
-          }
-        } else {
-          displaySnackBar("Error in sending Wifi SSID");
-          setState(() {
-            isLoading = false;
-          });
-          return -1;
-        }
+        await http.get(ssid_url).timeout(Duration(seconds: 3));
+        await http.get(password_url).timeout(Duration(seconds: 3));
+        await http.get(restart_url).timeout(Duration(seconds: 3));
+        return true;
       } else {
-        setState(() {
-          isLoading = false;
-        });
         displaySnackBar("No Global Settings Found");
         return false;
       }
     } on Exception catch (e) {
       print(e.toString());
-      return 0;
+      return e.toString();
     }
   }
 
@@ -414,32 +376,30 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                                                 setState(() {
                                                   isLoading = false;
                                                 });
-                                                if (res == true) {
-                                                  setState(() {
-                                                    sentSettings = true;
-                                                  });
-                                                  AppSettings
-                                                      .openWIFISettings();
-                                                } else {
-                                                  CoolAlert.show(
-                                                    context: context,
-                                                    type: CoolAlertType.error,
-                                                    title: res == false
-                                                        ? "Global Settings Not Found"
-                                                        : "Error in sending Home Wifi info to device",
-                                                    text: res == false
-                                                        ? "Please configure your Global Settings before adding a device."
-                                                        : "Please try again..",
-                                                    confirmBtnText:
-                                                        "Go To Home",
-                                                    onConfirmBtnTap: () {
-                                                      Navigator.pop(context);
-                                                      Navigator.popAndPushNamed(
-                                                          context,
-                                                          HomeScreen.id);
-                                                    },
-                                                  );
-                                                }
+                                                setState(() {
+                                                  sentSettings = true;
+                                                });
+                                                // AppSettings.openWIFISettings();
+                                                // if (res != true) {
+                                                //   CoolAlert.show(
+                                                //     context: context,
+                                                //     type: CoolAlertType.error,
+                                                //     title: res == false
+                                                //         ? "Global Settings Not Found"
+                                                //         : "Try Catch Exception",
+                                                //     text: res == false
+                                                //         ? "Please configure your Global Settings before adding a device."
+                                                //         : res,
+                                                //     confirmBtnText:
+                                                //         "Go To Home",
+                                                //     onConfirmBtnTap: () {
+                                                //       Navigator.pop(context);
+                                                //       Navigator.popAndPushNamed(
+                                                //           context,
+                                                //           HomeScreen.id);
+                                                //     },
+                                                //   );
+                                                // }
                                                 // openSettings();
                                               },
                                               child: Text("Send Credentials"),
