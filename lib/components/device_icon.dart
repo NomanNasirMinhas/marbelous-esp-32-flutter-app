@@ -152,7 +152,7 @@ class _DeviceIconState extends State<DeviceIcon> {
         var lastStatusOn = getLastChecked(deviceType);
         diff = DateTime.now().difference(lastStatusOn);
 
-        if (diff > Duration(seconds: 5)) {
+        if (diff > Duration(seconds: 30)) {
           setOffline(deviceType);
         }
         await Future.delayed(Duration(seconds: 5));

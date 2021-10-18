@@ -350,6 +350,7 @@ class _StarterCardState extends State<StarterCard> {
               },
             );
           } else {
+            _stopWatchTimer.onExecute.add(StopWatchExecute.stop);
             return RoundedButton(
               title: "Drop Marble",
               color: Colors.blue,

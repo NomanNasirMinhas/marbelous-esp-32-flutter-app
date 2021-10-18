@@ -90,7 +90,6 @@ startListeningForMessages(BuildContext context) async {
               false; //TODO: Set it to true when pressed Drop Marble
         }
       } else if (tokens[0].trim() == "deviceStatus") {
-        context.read(starter_Online).state = true;
         var deviceStatus = tokens[1].split("&");
         var deviceType = deviceStatus[0];
         var battery = 0;
