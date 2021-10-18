@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:cool_alert/cool_alert.dart';
 import 'package:flutter/material.dart';
 import 'package:marbelous_esp32_app/main.dart';
 import 'package:marbelous_esp32_app/screens/home_screen.dart';
@@ -47,6 +48,11 @@ class _StarterCardState extends State<StarterCard> {
 
   bool hasSwitch = false;
   bool hasFinisher = false;
+  bool hasStarter = false;
+
+  String starterName;
+  String finisherName;
+  String switchName;
 
   // bool dropping;
 
@@ -63,12 +69,15 @@ class _StarterCardState extends State<StarterCard> {
         if (value['type'] == "starter") {
           setState(() {
             starter_ip = value['ip'];
+            hasStarter = true;
+            starterName = value['name'];
           });
         }
 
         if (value['type'] == "finisher") {
           setState(() {
             hasFinisher = true;
+            finisherName = value['name'];
           });
         }
 
@@ -76,6 +85,7 @@ class _StarterCardState extends State<StarterCard> {
           setState(() {
             hasSwitch = true;
             switch_ip = value['ip'];
+            switchName = value['name'];
           });
         }
       });
@@ -98,24 +108,41 @@ class _StarterCardState extends State<StarterCard> {
   }
 
   dropMarble(BuildContext context) async {
-    try {
-      var url = Uri.parse(
-          "http://${starter_ip}/control?command=drop_marble_${dropMarbles}x${dropMarbleInterval}_");
-      http.Response res = await http.get(url).timeout(Duration(seconds: 3));
-      if (res.statusCode == 200 && res.body == "OK") {
-        displaySnackBar("Command Sent Successfully");
-        context.read(isDropping_Provider).state = true;
+    if (hasStarter == false) {
+      CoolAlert.show(
+          context: context,
+          type: CoolAlertType.error,
+          title: "Starter Not Found",
+          text: "Please Add Starter To Continue",
+          confirmBtnText: "Ok");
+    } else if (context.read(starter_Online).state == false) {
+      CoolAlert.show(
+          context: context,
+          type: CoolAlertType.error,
+          title: "Starter Offline",
+          text: "Please start your Starter to continue",
+          confirmBtnText: "Ok");
+    } else if (hasStarter == true &&
+        context.read(starter_Online).state == true) {
+      try {
+        var url = Uri.parse(
+            "http://${starter_ip}/control?command=drop_marble_${dropMarbles}x${dropMarbleInterval}_");
+        http.Response res = await http.get(url).timeout(Duration(seconds: 3));
+        if (res.statusCode == 200 && res.body == "OK") {
+          displaySnackBar("Command Sent Successfully");
+          context.read(isDropping_Provider).state = true;
 
-        _stopWatchTimer.onExecute.add(StopWatchExecute.reset);
-        _stopWatchTimer.onExecute.add(StopWatchExecute.start);
-      } else {
-        displaySnackBar("Command Sending Failed");
+          _stopWatchTimer.onExecute.add(StopWatchExecute.reset);
+          _stopWatchTimer.onExecute.add(StopWatchExecute.start);
+        } else {
+          displaySnackBar("Command Sending Failed");
+        }
+      } on TimeoutException catch (e) {
+        displaySnackBar("Command Timeout");
+      } on Error catch (e) {
+        print(e);
+        displaySnackBar("Command Sending Error");
       }
-    } on TimeoutException catch (e) {
-      displaySnackBar("Command Timeout");
-    } on Error catch (e) {
-      print(e);
-      displaySnackBar("Command Sending Error");
     }
   }
 
@@ -341,7 +368,7 @@ class _StarterCardState extends State<StarterCard> {
     return Column(
       children: [
         DeviceCard(
-          title: widget.title,
+          title: "Starter (${starterName == null ? "Not Set" : starterName})",
           icon: widget.icon,
           data: starterData(context),
         ),
@@ -352,7 +379,8 @@ class _StarterCardState extends State<StarterCard> {
             ? Column(
                 children: [
                   DeviceCard(
-                    title: "LaneSwitch",
+                    title:
+                        "LaneSwitch (${switchName == null ? "Not Set" : switchName})",
                     icon: 'assets/img/switch.png',
                     data: switchData(context),
                   ),
@@ -364,12 +392,17 @@ class _StarterCardState extends State<StarterCard> {
             : Container(),
         hasFinisher == true
             ? DeviceCard(
-                title: "Finisher",
+                title:
+                    "Finisher (${finisherName == null ? "Not Set" : finisherName})",
                 icon: 'assets/img/finisher.png',
                 data: finisherData(context),
               )
             : Container(),
-        SizedBox(height: 10),
+        hasSwitch == false && hasFinisher == false
+            ? SizedBox(
+                height: 200,
+              )
+            : SizedBox(height: 10),
       ],
     );
   }

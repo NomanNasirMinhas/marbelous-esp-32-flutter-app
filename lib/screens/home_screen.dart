@@ -20,54 +20,7 @@ import './../components/device_icon.dart';
 import 'package:cool_alert/cool_alert.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-final wifiIP_Provider = StateProvider((ref) => "");
-final isDropping_Provider = StateProvider((ref) => false);
-//Add Device Vars
-final deviceMac_Provider = StateProvider((ref) => "");
-final deviceType_Provider = StateProvider((ref) => "");
-final deviceName_Provider = StateProvider((ref) => "");
-final deviceIP_Provider = StateProvider((ref) => "");
-final deviceToAdd_Provider = StateProvider((ref) => "");
-final deviceFound_Provider = StateProvider((ref) => false);
-//Device Icons Vars
-final devicesStatus_Provider = StateProvider((ref) => {
-      'starter': {
-        'isOnline': false,
-        'battery': -1,
-        'lastStatusOn': DateTime.now()
-      },
-      'finisher': {
-        'isOnline': false,
-        'battery': -1,
-        'lastStatusOn': DateTime.now()
-      },
-      'wheel': {
-        'isOnline': false,
-        'battery': -1,
-        'lastStatusOn': DateTime.now()
-      },
-      'spiral': {
-        'isOnline': false,
-        'battery': -1,
-        'lastStatusOn': DateTime.now()
-      },
-      'teleport1': {
-        'isOnline': false,
-        'battery': -1,
-        'lastStatusOn': DateTime.now()
-      },
-      'teleport2': {
-        'isOnline': false,
-        'battery': -1,
-        'lastStatusOn': DateTime.now()
-      },
-      'switch': {
-        'isOnline': false,
-        'battery': -1,
-        'lastStatusOn': DateTime.now()
-      },
-    });
+import './../main.dart';
 
 class HomeScreen extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
@@ -90,54 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
   dynamic starter_advanced_settings;
   var receiver;
 
-  startListeningForMessages(BuildContext context) async {
-    final db = Localstore.instance;
-    final info = NetworkInfo();
-    try {
-      print("Listening for messages");
-      receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
-      var wifi = await info.getWifiIP();
-      context.read(wifiIP_Provider).state = wifi;
-
-      await receiver.listen((datagram) async {
-        var str = String.fromCharCodes(datagram.data);
-        print("Message Recived $str");
-        var tokens = str.split("=");
-        if (tokens[0].trim() == "device_msg") {
-          //For Receiving messages for starter cards
-          var command = tokens[1].split(":");
-          if (command[0] == "finisher_finish") {
-            context.read(isDropping_Provider).state =
-                false; //TODO: Set it to true when pressed Drop Marble
-          }
-        } else if (tokens[0].trim() == "deviceStatus") {
-          var deviceStatus = tokens[1].split("&");
-          var deviceType = deviceStatus[0];
-          var battery = 0;
-          var power = deviceStatus[1].split(':');
-          if (power[0] == "Battery") {
-            if (power[1] == "ON_USB_POW") {
-              battery = -1;
-            } else {
-              battery = int.parse(power[1]);
-            }
-          }
-          print("$deviceType is online with $battery Battery. Updating..");
-          context.read(devicesStatus_Provider).state.update(
-              deviceType,
-              (value) => {
-                    'isOnline': true,
-                    'battery': battery,
-                    'lastStatusOn': DateTime.now()
-                  });
-        }
-      });
-    } on Exception catch (e) {
-      // TODO
-      print(e.toString());
-    }
-  }
-
   // Future<UDP> receiver = UDP.bind(Endpoint.any(port: Port(65000)));
   scanNetwork() async {
     final db = Localstore.instance;
@@ -157,8 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
       starter_common_settings = common;
       starter_advanced_settings = advanced;
     });
-
-    print("Scanning Network");
 
     final items = await db.collection('marbelous_devices').get();
     if (items == null) {
@@ -224,12 +127,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     // TODO: implement initState
     scanNetwork();
+    startListeningForMessages(context);
     super.initState();
   }
 
   @override
   dispose() {
     super.dispose();
+    stopReciever();
   }
 
   @override
@@ -240,40 +145,72 @@ class _HomeScreenState extends State<HomeScreen> {
         child: LoadingOverlay(
           isLoading: isScanning,
           child: Scaffold(
-            appBar: AppBar(
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.settings),
-                  color: Colors.white,
-                  onPressed: () {
-                    Navigator.pushNamed(context, GlobalSettings.id);
-                  },
-                ),
-                // IconButton(
-                //   icon: Icon(Icons.notifications_active),
-                //   color: Colors.white,
-                //   onPressed: () {
-                //     // scanNetwork();
-                //   },
-                // ),
-              ],
-              title: Text(
-                "Marblelous Home",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Scheherazade',
-                  fontSize: 40,
-                  // decoration: TextDecoration.overline,
-                ),
-              ),
-            ),
+            // appBar: AppBar(
+            //   actions: [
+            //     IconButton(
+            //       icon: Icon(Icons.settings),
+            //       color: Colors.white,
+            //       onPressed: () {
+            //         Navigator.pushNamed(context, GlobalSettings.id);
+            //       },
+            //     ),
+            //     // IconButton(
+            //     //   icon: Icon(Icons.notifications_active),
+            //     //   color: Colors.white,
+            //     //   onPressed: () {
+            //     //     // scanNetwork();
+            //     //   },
+            //     // ),
+            //   ],
+            //   title: Text(
+            //     "Marblelous Home",
+            //     style: TextStyle(
+            //       color: Colors.white,
+            //       fontFamily: 'Scheherazade',
+            //       fontSize: 40,
+            //       // decoration: TextDecoration.overline,
+            //     ),
+            //   ),
+            // ),
             body: Center(
               child: Container(
                 child: ListView(
                   children: <Widget>[
-                    new Image.asset(
-                      'assets/img/logo.jpeg',
-                      fit: BoxFit.contain,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        children: [
+                          Expanded(flex: 1, child: Container()),
+                          Expanded(
+                            flex: 5,
+                            child: new Image.asset(
+                              'assets/img/logo.jpeg',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          Expanded(
+                              flex: 1,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                      context, GlobalSettings.id);
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                      border: Border.all(
+                                          color: Colors.black, width: 2),
+                                      borderRadius: BorderRadius.circular(4)),
+                                  child: Icon(
+                                    Icons.settings,
+                                    size: 30,
+                                  ),
+                                ),
+                              )),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: 20,
                     ),
                     StarterCard(
                       title:

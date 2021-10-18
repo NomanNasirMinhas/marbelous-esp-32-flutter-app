@@ -8,7 +8,7 @@ import 'package:network_info_plus/network_info_plus.dart';
 import 'package:cool_alert/cool_alert.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import './../screens/home_screen.dart';
+import './../main.dart';
 
 class DeviceIcon extends StatefulWidget {
   // const DeviceIcon({ Key? key }) : super(key: key);
@@ -28,7 +28,7 @@ class _DeviceIconState extends State<DeviceIcon> {
   String starterName;
   String deviceName;
   bool isAdded = false;
-  // bool isOnline = false;
+  bool isOnline = false;
   int battery = -1;
   // DateTime lastStatusOn = DateTime.now();
   Duration diff;
@@ -87,17 +87,73 @@ class _DeviceIconState extends State<DeviceIcon> {
     print('Done');
   }
 
-  startCheckingStatus(BuildContext context) async {
+  DateTime getLastChecked(String deviceType) {
+    var lastChecked;
+    switch (deviceType) {
+      case 'starter':
+        lastChecked = context.read(starter_lastStatusOn).state;
+        break;
+      case 'finisher':
+        lastChecked = context.read(finisher_lastStatusOn).state;
+        break;
+      case 'wheel':
+        lastChecked = context.read(wheel_lastStatusOn).state;
+        break;
+      case 'spiral':
+        lastChecked = context.read(spiral_lastStatusOn).state;
+        break;
+      case 'teleport1':
+        lastChecked = context.read(teleport1_lastStatusOn).state;
+        break;
+      case 'teleport2':
+        lastChecked = context.read(teleport2_lastStatusOn).state;
+        break;
+      case 'switch':
+        lastChecked = context.read(spiral_lastStatusOn).state;
+        break;
+      default:
+        lastChecked = DateTime.now();
+        break;
+    }
+    return lastChecked;
+  }
+
+  setOffline(String type) {
+    switch (type) {
+      case 'starter':
+        context.read(starter_Online).state = false;
+        break;
+      case 'finisher':
+        context.read(finisher_Online).state = false;
+        break;
+      case 'wheel':
+        context.read(wheel_Online).state = false;
+        break;
+      case 'spiral':
+        context.read(spiral_Online).state = false;
+        break;
+      case 'teleport1':
+        context.read(teleport1_Online).state = false;
+        break;
+      case 'teleport2':
+        context.read(teleport2_Online).state = false;
+        break;
+      case 'switch':
+        context.read(switch_Online).state = false;
+        break;
+      default:
+        break;
+    }
+  }
+
+  startCheckingStatus(BuildContext context, String deviceType) async {
     try {
       while (keepChecking && mounted) {
-        var lastStatusOn = context
-            .read(devicesStatus_Provider)
-            .state[deviceType]['lastStatusOn'];
+        var lastStatusOn = getLastChecked(deviceType);
         diff = DateTime.now().difference(lastStatusOn);
 
         if (diff > Duration(seconds: 5)) {
-          context.read(devicesStatus_Provider).state[deviceType]['isOnline'] =
-              false;
+          setOffline(deviceType);
         }
         await Future.delayed(Duration(seconds: 5));
       }
@@ -144,13 +200,6 @@ class _DeviceIconState extends State<DeviceIcon> {
   // }
 
   @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    receiver.close();
-  }
-
-  @override
   void initState() {
     // TODO: implement initState
     super.initState();
@@ -164,7 +213,7 @@ class _DeviceIconState extends State<DeviceIcon> {
 
   @override
   Widget build(BuildContext context) {
-    startCheckingStatus(context);
+    startCheckingStatus(context, widget.deviceType);
     displaySnackBar(String message) {
       final snackBar = SnackBar(
         content: Text(message),
@@ -218,6 +267,66 @@ class _DeviceIconState extends State<DeviceIcon> {
           }
         });
       }
+    }
+
+    StateProvider<bool> getOnlineStatus(String deviceType) {
+      var provider;
+      switch (deviceType) {
+        case 'starter':
+          provider = starter_Online;
+          break;
+        case 'finisher':
+          provider = finisher_Online;
+          break;
+        case 'wheel':
+          provider = wheel_Online;
+          break;
+        case 'spiral':
+          provider = spiral_Online;
+          break;
+        case 'teleport1':
+          provider = teleport1_Online;
+          break;
+        case 'teleport2':
+          provider = teleport2_Online;
+          break;
+        case 'switch':
+          provider = switch_Online;
+          break;
+        default:
+          break;
+      }
+      return provider;
+    }
+
+    StateProvider<int> getBatteryStatus(String deviceType) {
+      var provider;
+      switch (deviceType) {
+        case 'starter':
+          provider = starter_battery;
+          break;
+        case 'finisher':
+          provider = finisher_battery;
+          break;
+        case 'wheel':
+          provider = wheel_battery;
+          break;
+        case 'spiral':
+          provider = spiral_battery;
+          break;
+        case 'teleport1':
+          provider = teleport1_battery;
+          break;
+        case 'teleport2':
+          provider = teleport2_battery;
+          break;
+        case 'switch':
+          provider = switch_battery;
+          break;
+        default:
+          break;
+      }
+      return provider;
     }
 
     return GestureDetector(
@@ -282,35 +391,43 @@ class _DeviceIconState extends State<DeviceIcon> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Consumer(builder: (context, watch, _) {
-                    final onlineStatus = watch(devicesStatus_Provider)
-                        .state[deviceType]['isOnline'];
-                    return new Image.asset(
-                      onlineStatus
-                          ? 'assets/img/online.png'
-                          : 'assets/img/offline.png',
-                      width: 15,
-                      height: 15,
-                    );
+                    final onlineStatus =
+                        watch(getOnlineStatus(deviceType)).state;
+                    if (onlineStatus == true) {
+                      return new Image.asset(
+                        'assets/img/online.png',
+                        width: 15,
+                        height: 15,
+                      );
+                    } else {
+                      return new Image.asset(
+                        'assets/img/offline.png',
+                        width: 15,
+                        height: 15,
+                      );
+                    }
                   }),
                   SizedBox(
                     width: 20,
                   ),
                   Consumer(builder: (context, watch, _) {
-                    final onlineStatus = watch(devicesStatus_Provider)
-                        .state[deviceType]['isOnline'];
+                    final onlineStatus =
+                        watch(getOnlineStatus(deviceType)).state;
                     print("$deviceType in Consumer status is $onlineStatus");
                     if (onlineStatus == true) {
+                      final battStatus =
+                          watch(getBatteryStatus(deviceType)).state;
                       return Container(
                           width: 15,
                           height: 15,
-                          child: (battery == -1)
+                          child: (battStatus == -1)
                               ? new Image.asset(
                                   'assets/img/usbPower.png',
                                   height: 15,
                                   width: 15,
                                 )
                               : Text(
-                                  '${battery.toString()}',
+                                  '${battStatus.toString()}',
                                   style: TextStyle(
                                       color: Colors.green,
                                       fontSize: 14,

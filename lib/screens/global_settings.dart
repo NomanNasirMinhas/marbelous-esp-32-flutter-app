@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marbelous_esp32_app/components/round_button.dart';
+import 'package:marbelous_esp32_app/screens/device_cards/starter_card.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:udp/udp.dart';
 import '../../constants.dart';
@@ -8,6 +9,7 @@ import 'dart:io';
 import 'package:localstorage/localstorage.dart';
 import 'package:flutter/services.dart';
 import 'package:wifi_iot/wifi_iot.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class GlobalSettings extends StatefulWidget {
   // GlobalSettings({Key? key}) : super(key: key);
@@ -23,6 +25,19 @@ class _GlobalSettingsState extends State<GlobalSettings> {
   String wifi_password;
   String hue_bridge_ip;
   final db = Localstore.instance;
+  List<WifiNetwork> availableWifi;
+
+  var alertDialogStyle = AlertStyle(
+    animationType: AnimationType.grow,
+    overlayColor: Colors.black87,
+    isCloseButton: true,
+    isOverlayTapDismiss: true,
+    titleTextAlign: TextAlign.center,
+    titleStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+    descStyle: TextStyle(fontSize: 16),
+    animationDuration: Duration(milliseconds: 200),
+  );
+
   displaySnackBar(String message) {
     final snackBar = SnackBar(
       content: Text(message),
@@ -61,6 +76,9 @@ class _GlobalSettingsState extends State<GlobalSettings> {
     List<WifiNetwork> htResultNetwork;
     try {
       htResultNetwork = await WiFiForIoTPlugin.loadWifiList();
+      setState(() {
+        availableWifi = htResultNetwork;
+      });
       print("Wifi number ${htResultNetwork.length}");
       htResultNetwork.forEach((element) {
         print("Wifi");
@@ -71,6 +89,43 @@ class _GlobalSettingsState extends State<GlobalSettings> {
     }
 
     return htResultNetwork;
+  }
+
+  Widget wifiList() {
+    List<Widget> networks = [];
+    availableWifi.forEach((element) {
+      networks.add(GestureDetector(
+        onTap: () {
+          setState(() {
+            wifi_ssd = element.ssid;
+          });
+          Navigator.pop(context);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: BoldInfoText(
+                  text: element.ssid,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 5,
+            )
+          ],
+        ),
+      ));
+    });
+    return Column(
+      children: networks,
+    );
   }
 
   cancel() {
@@ -96,7 +151,7 @@ class _GlobalSettingsState extends State<GlobalSettings> {
   void initState() {
     super.initState();
     getCurrentGlobalSettings();
-    // loadWifiList();
+    loadWifiList();
   }
 
   @override
@@ -130,9 +185,47 @@ class _GlobalSettingsState extends State<GlobalSettings> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Wifi SSID: ${wifi_ssd == null ? 'Not Set' : '$wifi_ssd'}",
-                      style: boldInfoText,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Wifi SSID: ${wifi_ssd == null ? 'Not Set' : '$wifi_ssd'}",
+                          style: boldInfoText,
+                        ),
+                        GestureDetector(
+                          onTap: () async {
+                            await loadWifiList();
+                            Alert(
+                              context: context,
+                              style: alertDialogStyle,
+                              title: "Available Wifi",
+                              // desc: "Notification scheduled sucessfully",
+                              content: wifiList(),
+                              buttons: [
+                                DialogButton(
+                                  child: Text(
+                                    "Cancel",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 18),
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  // color: appThemeColor,
+                                ),
+                              ],
+                            ).show();
+                          },
+                          child: Text(
+                            "Available Networks",
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontStyle: FontStyle.italic,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                     TextFormField(
                       controller: cmdTextController,
@@ -146,7 +239,7 @@ class _GlobalSettingsState extends State<GlobalSettings> {
                         });
                       },
                       decoration: kTextFieldDecoration.copyWith(
-                          hintText: "Enter New SSID"),
+                          hintText: "Enter Custom SSID"),
                     )
                   ],
                 ),

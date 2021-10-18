@@ -18,7 +18,7 @@ class DeviceCard extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Colors.teal[700],
+              color: Colors.grey[600],
               border: Border(
                 bottom: BorderSide(
                   color: Colors.black,

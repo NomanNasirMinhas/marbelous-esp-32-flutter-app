@@ -41,6 +41,7 @@ dependencies:
   wifi_iot: ^0.3.8
   app_settings: ^4.1.1
   flutter_riverpod: ^0.14.0+3
+  rflutter_alert: ^2.0.4
 
 
 dev_dependencies:
