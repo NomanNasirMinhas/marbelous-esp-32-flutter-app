@@ -7,17 +7,26 @@ import 'screens/setting_screens/starter_common_settings.dart';
 import './screens/setting_screens/starter_advanced_settings.dart';
 import './screens/global_settings.dart';
 import './utilities/messageRecvr.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:marbelous_esp32_app/utilities/device_msg_class.dart';
+import 'package:udp/udp.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:localstore/localstore.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(MyApp());
+  runApp(
+    // Adding ProviderScope enables Riverpod for the entire project
+    ProviderScope(child: MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // startListeningForMessages(context);
     // MessageRecvr recvr = MessageRecvr();
     // recvr.startListeningForMessages();
     return MaterialApp(

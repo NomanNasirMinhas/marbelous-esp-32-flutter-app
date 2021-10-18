@@ -136,7 +136,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         'ip': deviceIP,
         'type': deviceType
       });
-      // receiver.close();
+      receiver.close();
       displaySnackBar("Device Added Successfully");
       Navigator.popAndPushNamed(context, HomeScreen.id);
     } on Exception catch (e) {
@@ -147,7 +147,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
 
   cancel() {
     displaySnackBar("Device Not Added");
-    // receiver.close();
+    receiver.close();
     Navigator.popAndPushNamed(context, HomeScreen.id);
   }
 

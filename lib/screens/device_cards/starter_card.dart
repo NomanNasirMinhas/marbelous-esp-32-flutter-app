@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:marbelous_esp32_app/main.dart';
 import 'package:marbelous_esp32_app/screens/home_screen.dart';
 import 'package:marbelous_esp32_app/utilities/device_class.dart';
 import './../../components/round_button.dart';
@@ -12,6 +13,8 @@ import 'package:stop_watch_timer/stop_watch_timer.dart';
 import 'package:http/http.dart' as http;
 import 'package:udp/udp.dart';
 import 'package:localstore/localstore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import './../home_screen.dart';
 
 class StarterCard extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
@@ -40,12 +43,12 @@ class _StarterCardState extends State<StarterCard> {
 
   //Starter Data
   int dropMarbles = 1;
-  int dropMarbleInterval = 1;
+  int dropMarbleInterval = 0;
 
   bool hasSwitch = false;
   bool hasFinisher = false;
 
-  bool dropping;
+  // bool dropping;
 
   scanNetwork() async {
     final db = Localstore.instance;
@@ -85,37 +88,6 @@ class _StarterCardState extends State<StarterCard> {
   initState() {
     super.initState();
     scanNetwork();
-    startUDPServer();
-    // _stopWatchTimer.rawTime.listen((value) =>
-    //     print('rawTime $value ${StopWatchTimer.getDisplayTime(value)}'));
-    // _stopWatchTimer.minuteTime.listen((value) => print('minuteTime $value'));
-    // _stopWatchTimer.secondTime.listen((value) => print('secondTime $value'));
-    // _stopWatchTimer.records.listen((value) => print('records $value'));
-  }
-
-  startUDPServer() async {
-    try {
-      // print("Starting search for $deviceToAdd");
-      receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
-
-      await receiver.listen((datagram) {
-        var str = String.fromCharCodes(datagram.data);
-        var tokens = str.split("=");
-        if (tokens[0].trim() == "device_msg") {
-          var command = tokens[1].split(":");
-          if (command[0] == "finisher_finish") {
-            _stopWatchTimer.onExecute.add(StopWatchExecute.stop);
-            setState(() {
-              dropping = false;
-            });
-            displaySnackBar("Finisher Sent finished command");
-          }
-        }
-      });
-    } on Exception catch (e) {
-      // TODO
-      print(e.toString());
-    }
   }
 
   @override
@@ -125,16 +97,15 @@ class _StarterCardState extends State<StarterCard> {
     // receiver.close();
   }
 
-  dropMarble() async {
+  dropMarble(BuildContext context) async {
     try {
       var url = Uri.parse(
           "http://${starter_ip}/control?command=drop_marble_${dropMarbles}x${dropMarbleInterval}_");
       http.Response res = await http.get(url).timeout(Duration(seconds: 3));
       if (res.statusCode == 200 && res.body == "OK") {
         displaySnackBar("Command Sent Successfully");
-        setState(() {
-          dropping = true;
-        });
+        context.read(isDropping_Provider).state = true;
+
         _stopWatchTimer.onExecute.add(StopWatchExecute.reset);
         _stopWatchTimer.onExecute.add(StopWatchExecute.start);
       } else {
@@ -155,7 +126,7 @@ class _StarterCardState extends State<StarterCard> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  Widget switchData() {
+  Widget switchData(BuildContext context) {
     return Column(
       children: [
         BoldInfoText(text: "Lane Switch"),
@@ -219,7 +190,7 @@ class _StarterCardState extends State<StarterCard> {
     );
   }
 
-  Widget finisherData() {
+  Widget finisherData(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 0),
       child: StreamBuilder<int>(
@@ -248,7 +219,7 @@ class _StarterCardState extends State<StarterCard> {
     );
   }
 
-  Widget starterData() {
+  Widget starterData(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -307,7 +278,7 @@ class _StarterCardState extends State<StarterCard> {
               title: " - ",
               color: Colors.blue[300],
               onClick: () {
-                if (dropMarbleInterval > 1) {
+                if (dropMarbleInterval > 0) {
                   setState(() {
                     dropMarbleInterval--;
                   });
@@ -340,24 +311,27 @@ class _StarterCardState extends State<StarterCard> {
           ],
         ),
         SizedBox(height: 10),
-        dropping == true
-            ? RoundedButton(
-                title: "Stop",
-                color: Colors.red,
-                onClick: () async {
-                  _stopWatchTimer.onExecute.add(StopWatchExecute.stop);
-                  setState(() {
-                    dropping = false;
-                  });
-                },
-              )
-            : RoundedButton(
-                title: "Drop Marble",
-                color: Colors.blue,
-                onClick: () {
-                  dropMarble();
-                },
-              ),
+        Consumer(builder: (context, watch, _) {
+          final dropping = watch(isDropping_Provider).state;
+          if (dropping == true) {
+            return RoundedButton(
+              title: "Stop",
+              color: Colors.red,
+              onClick: () async {
+                _stopWatchTimer.onExecute.add(StopWatchExecute.stop);
+                context.read(isDropping_Provider).state = false;
+              },
+            );
+          } else {
+            return RoundedButton(
+              title: "Drop Marble",
+              color: Colors.blue,
+              onClick: () {
+                dropMarble(context);
+              },
+            );
+          }
+        }),
       ],
     );
   }
@@ -369,7 +343,7 @@ class _StarterCardState extends State<StarterCard> {
         DeviceCard(
           title: widget.title,
           icon: widget.icon,
-          data: starterData(),
+          data: starterData(context),
         ),
         SizedBox(
           height: 20,
@@ -380,7 +354,7 @@ class _StarterCardState extends State<StarterCard> {
                   DeviceCard(
                     title: "LaneSwitch",
                     icon: 'assets/img/switch.png',
-                    data: switchData(),
+                    data: switchData(context),
                   ),
                   SizedBox(
                     height: 20,
@@ -392,7 +366,7 @@ class _StarterCardState extends State<StarterCard> {
             ? DeviceCard(
                 title: "Finisher",
                 icon: 'assets/img/finisher.png',
-                data: finisherData(),
+                data: finisherData(context),
               )
             : Container(),
         SizedBox(height: 10),

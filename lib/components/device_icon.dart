@@ -7,6 +7,8 @@ import 'package:udp/udp.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:cool_alert/cool_alert.dart';
 import 'package:app_settings/app_settings.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import './../screens/home_screen.dart';
 
 class DeviceIcon extends StatefulWidget {
   // const DeviceIcon({ Key? key }) : super(key: key);
@@ -26,9 +28,9 @@ class _DeviceIconState extends State<DeviceIcon> {
   String starterName;
   String deviceName;
   bool isAdded = false;
-  bool isOnline = false;
+  // bool isOnline = false;
   int battery = -1;
-  DateTime lastStatusOn = DateTime.now();
+  // DateTime lastStatusOn = DateTime.now();
   Duration diff;
   bool keepChecking = true;
   var receiver;
@@ -85,15 +87,17 @@ class _DeviceIconState extends State<DeviceIcon> {
     print('Done');
   }
 
-  startCheckingStatus() async {
+  startCheckingStatus(BuildContext context) async {
     try {
       while (keepChecking && mounted) {
+        var lastStatusOn = context
+            .read(devicesStatus_Provider)
+            .state[deviceType]['lastStatusOn'];
         diff = DateTime.now().difference(lastStatusOn);
+
         if (diff > Duration(seconds: 5)) {
-          setState(() {
-            isOnline = false;
-            // print("$deviceType is Offline Now");
-          });
+          context.read(devicesStatus_Provider).state[deviceType]['isOnline'] =
+              false;
         }
         await Future.delayed(Duration(seconds: 5));
       }
@@ -102,48 +106,48 @@ class _DeviceIconState extends State<DeviceIcon> {
     }
   }
 
-  startListeningStatus() async {
-    try {
-      print("Listening for battery and power status");
-      receiver = await UDP.bind(Endpoint.any(port: Port(widget.port)));
-      await receiver.listen((datagram) {
-        var str = String.fromCharCodes(datagram.data);
-        var tokens = str.split("=");
-        var deviceStatus = tokens[1].split("&");
-        if (tokens[0].trim() == "deviceStatus" &&
-            deviceStatus[0] == deviceType) {
-          setState(() {
-            isOnline = true;
-            lastStatusOn = DateTime.now();
-          });
+  // startListeningStatus() async {
+  //   try {
+  //     print("Listening for battery and power status");
+  //     receiver = await UDP.bind(Endpoint.any(port: Port(widget.port)));
+  //     await receiver.listen((datagram) {
+  //       var str = String.fromCharCodes(datagram.data);
+  //       var tokens = str.split("=");
+  //       var deviceStatus = tokens[1].split("&");
+  //       if (tokens[0].trim() == "deviceStatus" &&
+  //           deviceStatus[0] == deviceType) {
+  //         setState(() {
+  //           isOnline = true;
+  //           lastStatusOn = DateTime.now();
+  //         });
 
-          if (deviceStatus[0] == deviceType) {
-            var power = deviceStatus[1].split(':');
-            if (power[0] == "Battery") {
-              if (power[1] == "ON_USB_POW") {
-                setState(() {
-                  battery = -1;
-                });
-              } else {
-                setState(() {
-                  battery = int.parse(power[1]);
-                });
-              }
-            }
-          }
-        }
-      });
-    } on Exception catch (e) {
-      // TODO
-      print(e.toString());
-    }
-  }
+  //         if (deviceStatus[0] == deviceType) {
+  //           var power = deviceStatus[1].split(':');
+  //           if (power[0] == "Battery") {
+  //             if (power[1] == "ON_USB_POW") {
+  //               setState(() {
+  //                 battery = -1;
+  //               });
+  //             } else {
+  //               setState(() {
+  //                 battery = int.parse(power[1]);
+  //               });
+  //             }
+  //           }
+  //         }
+  //       }
+  //     });
+  //   } on Exception catch (e) {
+  //     // TODO
+  //     print(e.toString());
+  //   }
+  // }
 
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    // receiver.close();
+    receiver.close();
   }
 
   @override
@@ -155,12 +159,12 @@ class _DeviceIconState extends State<DeviceIcon> {
       deviceType = widget.deviceType;
       icon = widget.icon;
     });
-    startListeningStatus();
-    startCheckingStatus();
+    // startListeningStatus();
   }
 
   @override
   Widget build(BuildContext context) {
+    startCheckingStatus(context);
     displaySnackBar(String message) {
       final snackBar = SnackBar(
         content: Text(message),
@@ -277,18 +281,26 @@ class _DeviceIconState extends State<DeviceIcon> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  new Image.asset(
-                    isOnline
-                        ? 'assets/img/online.png'
-                        : 'assets/img/offline.png',
-                    width: 15,
-                    height: 15,
-                  ),
+                  Consumer(builder: (context, watch, _) {
+                    final onlineStatus = watch(devicesStatus_Provider)
+                        .state[deviceType]['isOnline'];
+                    return new Image.asset(
+                      onlineStatus
+                          ? 'assets/img/online.png'
+                          : 'assets/img/offline.png',
+                      width: 15,
+                      height: 15,
+                    );
+                  }),
                   SizedBox(
                     width: 20,
                   ),
-                  isOnline
-                      ? Container(
+                  Consumer(builder: (context, watch, _) {
+                    final onlineStatus = watch(devicesStatus_Provider)
+                        .state[deviceType]['isOnline'];
+                    print("$deviceType in Consumer status is $onlineStatus");
+                    if (onlineStatus == true) {
+                      return Container(
                           width: 15,
                           height: 15,
                           child: (battery == -1)
@@ -303,8 +315,11 @@ class _DeviceIconState extends State<DeviceIcon> {
                                       color: Colors.green,
                                       fontSize: 14,
                                       fontFamily: 'Bebas'),
-                                ))
-                      : Container()
+                                ));
+                    } else {
+                      return Container();
+                    }
+                  }),
                 ],
               ),
             )

@@ -19,6 +19,55 @@ import './device_cards/starter_card.dart';
 import './../components/device_icon.dart';
 import 'package:cool_alert/cool_alert.dart';
 import 'package:app_settings/app_settings.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final wifiIP_Provider = StateProvider((ref) => "");
+final isDropping_Provider = StateProvider((ref) => false);
+//Add Device Vars
+final deviceMac_Provider = StateProvider((ref) => "");
+final deviceType_Provider = StateProvider((ref) => "");
+final deviceName_Provider = StateProvider((ref) => "");
+final deviceIP_Provider = StateProvider((ref) => "");
+final deviceToAdd_Provider = StateProvider((ref) => "");
+final deviceFound_Provider = StateProvider((ref) => false);
+//Device Icons Vars
+final devicesStatus_Provider = StateProvider((ref) => {
+      'starter': {
+        'isOnline': false,
+        'battery': -1,
+        'lastStatusOn': DateTime.now()
+      },
+      'finisher': {
+        'isOnline': false,
+        'battery': -1,
+        'lastStatusOn': DateTime.now()
+      },
+      'wheel': {
+        'isOnline': false,
+        'battery': -1,
+        'lastStatusOn': DateTime.now()
+      },
+      'spiral': {
+        'isOnline': false,
+        'battery': -1,
+        'lastStatusOn': DateTime.now()
+      },
+      'teleport1': {
+        'isOnline': false,
+        'battery': -1,
+        'lastStatusOn': DateTime.now()
+      },
+      'teleport2': {
+        'isOnline': false,
+        'battery': -1,
+        'lastStatusOn': DateTime.now()
+      },
+      'switch': {
+        'isOnline': false,
+        'battery': -1,
+        'lastStatusOn': DateTime.now()
+      },
+    });
 
 class HomeScreen extends StatefulWidget {
   // HomeScreen({Key? key}) : super(key: key);
@@ -39,6 +88,55 @@ class _HomeScreenState extends State<HomeScreen> {
   String starterName;
   dynamic starter_common_settings;
   dynamic starter_advanced_settings;
+  var receiver;
+
+  startListeningForMessages(BuildContext context) async {
+    final db = Localstore.instance;
+    final info = NetworkInfo();
+    try {
+      print("Listening for messages");
+      receiver = await UDP.bind(Endpoint.any(port: Port(65000)));
+      var wifi = await info.getWifiIP();
+      context.read(wifiIP_Provider).state = wifi;
+
+      await receiver.listen((datagram) async {
+        var str = String.fromCharCodes(datagram.data);
+        print("Message Recived $str");
+        var tokens = str.split("=");
+        if (tokens[0].trim() == "device_msg") {
+          //For Receiving messages for starter cards
+          var command = tokens[1].split(":");
+          if (command[0] == "finisher_finish") {
+            context.read(isDropping_Provider).state =
+                false; //TODO: Set it to true when pressed Drop Marble
+          }
+        } else if (tokens[0].trim() == "deviceStatus") {
+          var deviceStatus = tokens[1].split("&");
+          var deviceType = deviceStatus[0];
+          var battery = 0;
+          var power = deviceStatus[1].split(':');
+          if (power[0] == "Battery") {
+            if (power[1] == "ON_USB_POW") {
+              battery = -1;
+            } else {
+              battery = int.parse(power[1]);
+            }
+          }
+          print("$deviceType is online with $battery Battery. Updating..");
+          context.read(devicesStatus_Provider).state.update(
+              deviceType,
+              (value) => {
+                    'isOnline': true,
+                    'battery': battery,
+                    'lastStatusOn': DateTime.now()
+                  });
+        }
+      });
+    } on Exception catch (e) {
+      // TODO
+      print(e.toString());
+    }
+  }
 
   // Future<UDP> receiver = UDP.bind(Endpoint.any(port: Port(65000)));
   scanNetwork() async {
@@ -134,152 +232,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Widget getCurrentWidget() {
-    switch (currentWidget) {
-      case "none":
-        return Container(
-          decoration: sectionCard,
-          child: GestureDetector(
-            onTap: () {
-              Navigator.popAndPushNamed(context, AddDeviceScreen.id,
-                  arguments: {'deviceType': "starter"});
-            },
-            child: Text(
-              "Starter NOT Found. Click to Add",
-              style: subheadingText,
-              textAlign: TextAlign.center,
-            ),
-          ),
-        );
-        break;
-      case "starter":
-        if (devicesMap.containsKey("starter")) {
-          return StarterCard(
-            title:
-                "Starter (${starter_common_settings == null ? "Name Not Set" : starter_common_settings['name']})",
-            icon: "assets/img/starter.png",
-            type: "starter",
-          );
-        } else {
-          return GestureDetector(
-              onTap: () {
-                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
-                    arguments: {'deviceType': "starter"});
-              },
-              child: Text(
-                "Device NOT Found. Click to Add",
-                style: subheadingText,
-                textAlign: TextAlign.center,
-              ));
-        }
-        break;
-      case 'finisher':
-        if (devicesMap.containsKey("finisher")) {
-          return BoldInfoText(text: "Device Card Not Ready Yet");
-        } else {
-          return GestureDetector(
-              onTap: () {
-                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
-                    arguments: {'deviceType': "finisher"});
-              },
-              child: Text(
-                "Device NOT Found. Click to Add",
-                style: subheadingText,
-                textAlign: TextAlign.center,
-              ));
-        }
-        break;
-      case 'wheel':
-        if (devicesMap.containsKey("wheel")) {
-          return BoldInfoText(text: "Device Card Not Ready Yet");
-        } else {
-          return GestureDetector(
-              onTap: () {
-                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
-                    arguments: {'deviceType': "wheel"});
-              },
-              child: Text(
-                "Device NOT Found. Click to Add",
-                style: subheadingText,
-                textAlign: TextAlign.center,
-              ));
-        }
-        break;
-      case 'spiral':
-        if (devicesMap.containsKey("spiral")) {
-          return BoldInfoText(text: "Device Card Not Ready Yet");
-        } else {
-          return GestureDetector(
-              onTap: () {
-                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
-                    arguments: {'deviceType': "spiral"});
-              },
-              child: Text(
-                "Device NOT Found. Click to Add",
-                style: subheadingText,
-                textAlign: TextAlign.center,
-              ));
-        }
-        break;
-      case 'teleport1':
-        if (devicesMap.containsKey("teleport1")) {
-          return BoldInfoText(text: "Device Card Not Ready Yet");
-        } else {
-          return GestureDetector(
-              onTap: () {
-                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
-                    arguments: {'deviceType': "teleport1"});
-              },
-              child: Text(
-                "Device NOT Found. Click to Add",
-                style: subheadingText,
-                textAlign: TextAlign.center,
-              ));
-        }
-        break;
-      case 'teleport2':
-        if (devicesMap.containsKey("teleport2")) {
-          return BoldInfoText(text: "Device Card Not Ready Yet");
-        } else {
-          return GestureDetector(
-              onTap: () {
-                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
-                    arguments: {'deviceType': "teleport2"});
-              },
-              child: Text(
-                "Device NOT Found. Click to Add",
-                style: subheadingText,
-                textAlign: TextAlign.center,
-              ));
-        }
-        break;
-      case 'switch':
-        if (devicesMap.containsKey("switch")) {
-          return BoldInfoText(text: "Device Card Not Ready Yet");
-        } else {
-          return GestureDetector(
-              onTap: () {
-                Navigator.popAndPushNamed(context, AddDeviceScreen.id,
-                    arguments: {'deviceType': "switch"});
-              },
-              child: Text(
-                "Device NOT Found. Click to Add",
-                style: subheadingText,
-                textAlign: TextAlign.center,
-              ));
-        }
-        break;
-      default:
-        return Text(
-          "Error",
-          style: subheadingText,
-          textAlign: TextAlign.center,
-        );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    startListeningForMessages(context);
     return Container(
       child: SafeArea(
         child: LoadingOverlay(
@@ -440,3 +395,147 @@ class BoldInfoText extends StatelessWidget {
     );
   }
 }
+
+  // Widget getCurrentWidget() {
+  //   switch (currentWidget) {
+  //     case "none":
+  //       return Container(
+  //         decoration: sectionCard,
+  //         child: GestureDetector(
+  //           onTap: () {
+  //             Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+  //                 arguments: {'deviceType': "starter"});
+  //           },
+  //           child: Text(
+  //             "Starter NOT Found. Click to Add",
+  //             style: subheadingText,
+  //             textAlign: TextAlign.center,
+  //           ),
+  //         ),
+  //       );
+  //       break;
+  //     case "starter":
+  //       if (devicesMap.containsKey("starter")) {
+  //         return StarterCard(
+  //           title:
+  //               "Starter (${starter_common_settings == null ? "Name Not Set" : starter_common_settings['name']})",
+  //           icon: "assets/img/starter.png",
+  //           type: "starter",
+  //         );
+  //       } else {
+  //         return GestureDetector(
+  //             onTap: () {
+  //               Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+  //                   arguments: {'deviceType': "starter"});
+  //             },
+  //             child: Text(
+  //               "Device NOT Found. Click to Add",
+  //               style: subheadingText,
+  //               textAlign: TextAlign.center,
+  //             ));
+  //       }
+  //       break;
+  //     case 'finisher':
+  //       if (devicesMap.containsKey("finisher")) {
+  //         return BoldInfoText(text: "Device Card Not Ready Yet");
+  //       } else {
+  //         return GestureDetector(
+  //             onTap: () {
+  //               Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+  //                   arguments: {'deviceType': "finisher"});
+  //             },
+  //             child: Text(
+  //               "Device NOT Found. Click to Add",
+  //               style: subheadingText,
+  //               textAlign: TextAlign.center,
+  //             ));
+  //       }
+  //       break;
+  //     case 'wheel':
+  //       if (devicesMap.containsKey("wheel")) {
+  //         return BoldInfoText(text: "Device Card Not Ready Yet");
+  //       } else {
+  //         return GestureDetector(
+  //             onTap: () {
+  //               Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+  //                   arguments: {'deviceType': "wheel"});
+  //             },
+  //             child: Text(
+  //               "Device NOT Found. Click to Add",
+  //               style: subheadingText,
+  //               textAlign: TextAlign.center,
+  //             ));
+  //       }
+  //       break;
+  //     case 'spiral':
+  //       if (devicesMap.containsKey("spiral")) {
+  //         return BoldInfoText(text: "Device Card Not Ready Yet");
+  //       } else {
+  //         return GestureDetector(
+  //             onTap: () {
+  //               Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+  //                   arguments: {'deviceType': "spiral"});
+  //             },
+  //             child: Text(
+  //               "Device NOT Found. Click to Add",
+  //               style: subheadingText,
+  //               textAlign: TextAlign.center,
+  //             ));
+  //       }
+  //       break;
+  //     case 'teleport1':
+  //       if (devicesMap.containsKey("teleport1")) {
+  //         return BoldInfoText(text: "Device Card Not Ready Yet");
+  //       } else {
+  //         return GestureDetector(
+  //             onTap: () {
+  //               Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+  //                   arguments: {'deviceType': "teleport1"});
+  //             },
+  //             child: Text(
+  //               "Device NOT Found. Click to Add",
+  //               style: subheadingText,
+  //               textAlign: TextAlign.center,
+  //             ));
+  //       }
+  //       break;
+  //     case 'teleport2':
+  //       if (devicesMap.containsKey("teleport2")) {
+  //         return BoldInfoText(text: "Device Card Not Ready Yet");
+  //       } else {
+  //         return GestureDetector(
+  //             onTap: () {
+  //               Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+  //                   arguments: {'deviceType': "teleport2"});
+  //             },
+  //             child: Text(
+  //               "Device NOT Found. Click to Add",
+  //               style: subheadingText,
+  //               textAlign: TextAlign.center,
+  //             ));
+  //       }
+  //       break;
+  //     case 'switch':
+  //       if (devicesMap.containsKey("switch")) {
+  //         return BoldInfoText(text: "Device Card Not Ready Yet");
+  //       } else {
+  //         return GestureDetector(
+  //             onTap: () {
+  //               Navigator.popAndPushNamed(context, AddDeviceScreen.id,
+  //                   arguments: {'deviceType': "switch"});
+  //             },
+  //             child: Text(
+  //               "Device NOT Found. Click to Add",
+  //               style: subheadingText,
+  //               textAlign: TextAlign.center,
+  //             ));
+  //       }
+  //       break;
+  //     default:
+  //       return Text(
+  //         "Error",
+  //         style: subheadingText,
+  //         textAlign: TextAlign.center,
+  //       );
+  //   }
+  // }
