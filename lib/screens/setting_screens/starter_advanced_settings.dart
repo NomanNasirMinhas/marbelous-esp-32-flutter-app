@@ -12,6 +12,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'package:loading_overlay/loading_overlay.dart';
+import './../../main.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class StarterAdvancedSettings extends StatefulWidget {
   // StarterAdvancedSettings({Key? key}) : super(key: key);
@@ -42,66 +44,77 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
     final snackBar = SnackBar(
       content: Text(message),
     );
-
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    }
   }
 
   cancel() {
-    displaySnackBar("Device Not Added");
     Navigator.pop(context);
   }
 
   @override
   void initState() {
-    fetchCurrentSettings();
     super.initState();
+    // fetchCurrentSettings();
   }
 
-  fetchCurrentSettings() async {
+  fetchCurrentSettings() {
+    setState(() {
+      starter_ip = context.read(starter_ip_provider).state;
+    });
     try {
-      var url =
-          Uri.parse("http://$starter_ip/control?command=getAdvancedSettings");
-      http.Response res = await http.get(url);
-      if (res.statusCode == 200) {
-        var result = res.body.split("=");
-        if (result[0] == "advancedSettings") {
-          var settings = result[1].split(",");
-          var idleColorString = settings[1].split(":")[1].split("-");
-          var dropColorString = settings[2].split(":")[1].split("-");
-          setState(() {
-            autoOffBatt = int.parse(settings[0].split(":")[1]);
-            autoOffUSB = int.parse(settings[1].split(":")[1]);
-            keepAliveInterval = int.parse(settings[2].split(":")[1]);
-            MQTT_pass = settings[3].split(":")[1];
-            MQTT_cmd1 = settings[4].split(":")[1];
-            MQTT_url1 = settings[5].split(":")[1];
-            MQTT_cmd2 = settings[6].split(":")[1];
-            MQTT_url2 = settings[7].split(":")[1];
-            triggerURL = settings[8].split(":")[1];
-            wifiEnabled =
-                int.parse(settings[9].split(":")[1]) == 1 ? true : false;
-            cmdToDropMarble = settings[10].split(":")[1];
-            shutdownSoundEnabled =
-                int.parse(settings[11].split(":")[1]) == 1 ? true : false;
-          });
-        } else {
-          displaySnackBar("Unable to get current Advanced Settings");
-        }
+      if (context.read(starter_advanced_settings_provider).state != null) {
+        setState(() {
+          autoOffBatt = context
+              .read(starter_advanced_settings_provider)
+              .state['autoOffBatt'];
+          autoOffUSB = context
+              .read(starter_advanced_settings_provider)
+              .state['autoOffUSB'];
+          keepAliveInterval = context
+              .read(starter_advanced_settings_provider)
+              .state['keepAliveInterval'];
+          MQTT_pass = context
+              .read(starter_advanced_settings_provider)
+              .state['MQTT_pass'];
+          MQTT_cmd1 = context
+              .read(starter_advanced_settings_provider)
+              .state['MQTT_cmd1'];
+          MQTT_url1 = context
+              .read(starter_advanced_settings_provider)
+              .state['MQTT_url1'];
+          MQTT_cmd2 = context
+              .read(starter_advanced_settings_provider)
+              .state['MQTT_cmd2'];
+          MQTT_url2 = context
+              .read(starter_advanced_settings_provider)
+              .state['MQTT_url2'];
+          triggerURL = context
+              .read(starter_advanced_settings_provider)
+              .state['triggerURL'];
+          wifiEnabled = context
+              .read(starter_advanced_settings_provider)
+              .state['wifiEnabled'];
+          cmdToDropMarble = context
+              .read(starter_advanced_settings_provider)
+              .state['cmdToDropMarble'];
+          shutdownSoundEnabled = context
+              .read(starter_advanced_settings_provider)
+              .state['shutdownSoundEnabled'];
+        });
       } else {
-        displaySnackBar("Unable to get current Advanced Settings");
+        // displaySnackBar("Advanced Settings Not Found");
       }
     } on Exception catch (e) {
       // TODO
-      displaySnackBar("Unable to get current Advanced Settings");
+      // displaySnackBar("Try Catch Error = ${e.toString()}");
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context).settings.arguments as Map;
-    setState(() {
-      starter_ip = arguments['starter_ip'];
-    });
+    fetchCurrentSettings();
     List<String> settings_commands = [
       "http://$starter_ip/control?command=auto_off_battery&value=$autoOffBatt",
       "http://$starter_ip/control?command=auto_off_usb&value=$autoOffUSB",
@@ -211,6 +224,9 @@ class _AdvancedSettingsState extends State<StarterAdvancedSettings> {
                       ),
                     ),
                   ],
+                ),
+                BoldInfoText(
+                  text: "Starter IP: $starter_ip",
                 ),
                 SizedBox(
                   height: 30,

@@ -78,7 +78,15 @@ class _HomeScreenState extends State<HomeScreen> {
         print("Adding device type ${device.type}");
         devicesMap[device.type] = device;
         // var idx = devices.indexOf(device);
-
+        if (device.type == "starter") {
+          context.read(starter_ip_provider).state = device.ipAddrr;
+        }
+        if (device.type == "finisher") {
+          context.read(finisher_ip_provider).state = device.ipAddrr;
+        }
+        if (device.type == "switch") {
+          context.read(switch_ip_provider).state = device.ipAddrr;
+        }
         setState(() {
           if (device.type == "starter") {
             starterFound = true;

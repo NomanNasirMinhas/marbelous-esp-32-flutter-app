@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:marbelous_esp32_app/screens/add_device_screen.dart';
 // import './screens/home.dart';
@@ -23,6 +25,17 @@ void main() {
 }
 
 var receiver;
+
+//Settings
+final starter_common_settings_provider =
+    StateProvider<Map<String, dynamic>>((ref) => null);
+final starter_advanced_settings_provider =
+    StateProvider<Map<String, dynamic>>((ref) => null);
+
+//Device IPs
+final starter_ip_provider = StateProvider<String>((ref) => null);
+final finisher_ip_provider = StateProvider<String>((ref) => null);
+final switch_ip_provider = StateProvider<String>((ref) => null);
 
 final wifiIP_Provider = StateProvider((ref) => "");
 final isDropping_Provider = StateProvider((ref) => false);

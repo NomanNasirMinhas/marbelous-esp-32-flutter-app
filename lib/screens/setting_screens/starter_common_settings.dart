@@ -12,6 +12,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import 'package:loading_overlay/loading_overlay.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import './../../main.dart';
 
 class StarterCommonSettings extends StatefulWidget {
   // StarterCommonSettings({Key? key}) : super(key: key);
@@ -74,7 +76,79 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
     colors.add(white);
   }
 
+  fetchCurrentAdvancedSettings() async {
+    setState(() {
+      starter_ip = context.read(starter_ip_provider).state;
+    });
+    try {
+      var url =
+          Uri.parse("http://$starter_ip/control?command=getAdvancedSettings");
+      http.Response res = await http.get(url);
+      if (res.statusCode == 200) {
+        var result = res.body.split("=");
+        if (result[0] == "advancedSettings") {
+          var settings = result[1].split(",");
+          var idleColorString = settings[1].split(":")[1].split("-");
+          var dropColorString = settings[2].split(":")[1].split("-");
+          setState(() {
+            context
+                .read(starter_advanced_settings_provider)
+                .state['autoOffBatt'] = int.parse(settings[0].split(":")[1]);
+            context
+                .read(starter_advanced_settings_provider)
+                .state['autoOffUSB'] = int.parse(settings[1].split(":")[1]);
+            context
+                    .read(starter_advanced_settings_provider)
+                    .state['keepAliveInterval'] =
+                int.parse(settings[2].split(":")[1]);
+            context
+                .read(starter_advanced_settings_provider)
+                .state['MQTT_pass'] = settings[3].split(":")[1];
+            context
+                .read(starter_advanced_settings_provider)
+                .state['MQTT_cmd1'] = settings[4].split(":")[1];
+            context
+                .read(starter_advanced_settings_provider)
+                .state['MQTT_url1'] = settings[5].split(":")[1];
+            context
+                .read(starter_advanced_settings_provider)
+                .state['MQTT_cmd2'] = settings[6].split(":")[1];
+            context
+                .read(starter_advanced_settings_provider)
+                .state['MQTT_url2'] = settings[7].split(":")[1];
+            context
+                .read(starter_advanced_settings_provider)
+                .state['triggerURL'] = settings[8].split(":")[1];
+            context
+                    .read(starter_advanced_settings_provider)
+                    .state['wifiEnabled'] =
+                int.parse(settings[9].split(":")[1]) == 1 ? true : false;
+            context
+                .read(starter_advanced_settings_provider)
+                .state['cmdToDropMarble'] = settings[10].split(":")[1];
+            context
+                    .read(starter_advanced_settings_provider)
+                    .state['shutdownSoundEnabled'] =
+                int.parse(settings[11].split(":")[1]) == 1 ? true : false;
+          });
+        } else {
+          displaySnackBar(
+              "Advanced Settings: Ill Formatted String, returned ${result[0]}");
+        }
+      } else {
+        displaySnackBar(
+            "Advanced Settings: Status Code Error, got ${res.statusCode.toString()}");
+      }
+    } on Exception catch (e) {
+      // TODO
+      displaySnackBar("Advanced Settings: Try Catch Error = ${e.toString()}");
+    }
+  }
+
   fetchCurrentSettings() async {
+    setState(() {
+      starter_ip = context.read(starter_ip_provider).state;
+    });
     try {
       var url =
           Uri.parse("http://$starter_ip/control?command=getCommonSettings");
@@ -110,14 +184,14 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
             name = settings[6].split(":")[1];
           });
         } else {
-          displaySnackBar("Unable to get current Common Settings");
+          displaySnackBar("Ill Formatted String, returned ${result[0]}");
         }
       } else {
-        displaySnackBar("Unable to get current Common Settings");
+        displaySnackBar("Status Code Error, got ${res.statusCode.toString()}");
       }
     } on Exception catch (e) {
       // TODO
-      displaySnackBar("Unable to get current Common Settings");
+      displaySnackBar("Try Catch Error = ${e.toString()}");
     }
   }
 
@@ -207,9 +281,7 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
   @override
   Widget build(BuildContext context) {
     final arguments = ModalRoute.of(context).settings.arguments as Map;
-    setState(() {
-      starter_ip = arguments['starter_ip'];
-    });
+
     List<String> settings_commands = [
       "http://$starter_ip/control?command=breating_active&state=${beatingLEDactive == true ? 1 : 0}",
       "http://$starter_ip/control?command=arrow_color_idle&R=${idleColor.red}&G=${idleColor.green}&B=${idleColor.blue}",
@@ -320,6 +392,9 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                       ),
                     ),
                   ],
+                ),
+                BoldInfoText(
+                  text: "Starter IP: $starter_ip",
                 ),
                 SizedBox(
                   height: 30,
@@ -861,12 +936,10 @@ class _CommonSettingsState extends State<StarterCommonSettings> {
                     RoundedButton(
                       color: Colors.teal[800],
                       title: "Advanced Settings",
-                      onClick: () {
+                      onClick: () async {
+                        await fetchCurrentAdvancedSettings();
                         Navigator.popAndPushNamed(
-                          context,
-                          StarterAdvancedSettings.id,
-                          arguments: {'starter_ip': starter_ip},
-                        );
+                            context, StarterAdvancedSettings.id);
                       },
                     ),
                     RoundedButton(
